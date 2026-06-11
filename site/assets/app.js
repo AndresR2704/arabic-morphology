@@ -5,6 +5,7 @@ import {
   loadVerbs, distinct,
 } from './data.js';
 import { VirtualTable, normalizeArabic } from './render.js';
+import { downloadTableAsCSV, downloadTableAsJSON, downloadTableAsTXT } from './downloadTools.js';
 
 // Western-Arabic (Latin) digits with thousands separators, per project convention.
 const arNum = (n) => n.toLocaleString('en-US');
@@ -227,3 +228,47 @@ function debounce(fn, ms) {
     t = setTimeout(() => fn(...args), ms);
   };
 }
+
+//---------------------------------------------Uses the download options-----------------------------------
+
+// Get modal element
+const modal = document.getElementById('downloadModal');
+const downloadBtn = document.getElementById('download');
+
+// Show modal when download button is clicked
+downloadBtn.addEventListener('click', function(e) {
+  e.preventDefault();
+  modal.style.display = 'flex';
+});
+
+// Close modal when clicking X
+document.querySelector('.close-modal').addEventListener('click', function() {
+  modal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', function(e) {
+  if (e.target === modal) {
+    modal.style.display = 'none';
+  }
+});
+
+// Handle format selection
+document.querySelectorAll('.modal-option').forEach(button => {
+  button.addEventListener('click', function() {
+    const format = this.getAttribute('data-format');
+    modal.style.display = 'none';
+    
+    switch(format) {
+      case 'csv':
+        downloadTableAsCSV();
+        break;
+      case 'json':
+        downloadTableAsJSON();
+        break;
+      case 'txt':
+        downloadTableAsTXT();
+        break;
+    }
+  });
+});
