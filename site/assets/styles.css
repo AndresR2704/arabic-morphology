@@ -292,7 +292,7 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
 
 .slider:before {
   position: absolute;
-  content: "No vowel";
+  content: "صحيح";
   height: 26px;
   width: 65px;
   left: 4px;
@@ -311,5 +311,5 @@ input:checked + .slider:before {
   -webkit-transform: translateX(47px);
   -ms-transform: translateX(47px);
   transform: translateX(47px);
-  content: "Vowel";
+  content: "مُعتل";
 }
