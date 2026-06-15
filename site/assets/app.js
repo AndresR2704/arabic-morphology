@@ -251,7 +251,8 @@ function updateList6() {
           <option value="double">لفيف (فيه حرفا علة)</option>
         </select>
       </p>
-      <p>حرف العلة  
+      <p id="vowelTypeContainer">
+        حرف العلة  
         <select id="vowelTypeSelect">
           <option value="">اختر حرفًا</option>
           <option value="o">الواو</option>
@@ -268,27 +269,41 @@ function updateList6() {
         </p>
       </div>
     `;
-    updateControlBoxBorders();
+
     const vowelPosition = document.getElementById('vowelPositionSelect');
-    const vowelType = document.getElementById('vowelTypeSelect');
-    const vowelPattern = document.getElementById('vowelPatternSelect');
+    const vowelTypeContainer = document.getElementById('vowelTypeContainer');
+    const patternContainer = document.getElementById('patternContainer');
 
     function handlePositionChange() {
-      const patternContainer = document.getElementById('patternContainer');
+      const isDouble = vowelPosition.value === 'double';
+      // Show/hide vowel type container
+      if (vowelTypeContainer) {
+        vowelTypeContainer.style.display = isDouble ? 'none' : '';
+      }
+      // Show/hide pattern container
       if (patternContainer) {
-        patternContainer.style.display = vowelPosition.value === 'double' ? 'block' : 'none';
+        patternContainer.style.display = isDouble ? 'block' : 'none';
       }
       applyFilters();
     }
 
-    if (vowelPosition) vowelPosition.addEventListener('change', handlePositionChange);
+    if (vowelPosition) {
+      vowelPosition.addEventListener('change', handlePositionChange);
+      // Also call once to set initial visibility
+      handlePositionChange();
+    }
+
+    const vowelType = document.getElementById('vowelTypeSelect');
+    const vowelPattern = document.getElementById('vowelPatternSelect');
+
     if (vowelType) vowelType.addEventListener('change', applyFilters);
     if (vowelPattern) vowelPattern.addEventListener('change', applyFilters);
 
   } else {
     list6.innerHTML = '';
+    applyFilters();
   }
-  applyFilters();
+  updateControlBoxBorders();
 }
 
 // Update list7 
@@ -383,11 +398,9 @@ function applyFilters() {
   const deriv = els.deriv.value;
   const trans = els.trans.value;
 
-  // Get selected pattern values from checkboxes in list8
   const selectedPatterns = Array.from(document.querySelectorAll('#list8 input[type="checkbox"]:checked'))
                                  .map(cb => cb.value);
 
-  // Get dynamic filter values
   const letter1 = document.getElementById('letter1')?.value || '';
   const letter2 = document.getElementById('letter2')?.value || '';
   const letter3 = document.getElementById('letter3')?.value || '';
@@ -400,28 +413,24 @@ function applyFilters() {
 
   const vowelPosition = document.getElementById('vowelPositionSelect')?.value || '';
   const vowelType = document.getElementById('vowelTypeSelect')?.value || '';
+  const vowelPattern = document.getElementById('vowelPatternSelect')?.value || '';
 
   const filtered = ALL.filter((r) => {
-    // Basic filters
     if (cat && r[FIELD.cat] !== cat) return false;
     if (deriv && r[FIELD.deriv] !== deriv) return false;
     if (trans && r[FIELD.trans] !== trans) return false;
     if (q && !normalizeArabic(r[FIELD.verb]).includes(q) && !normalizeArabic(r[FIELD.root]).includes(q)) return false;
-
-    // Pattern filter: if any pattern checkbox is selected, the verb's pattern must match one of them
     if (selectedPatterns.length > 0 && !selectedPatterns.includes(String(r[FIELD.pattern]))) return false;
 
     const root = r[FIELD.root];
     const rootLength = root.length;
 
-    // Letter filters for trilateral
     if (cat === 'tri' && rootLength === 3) {
       if (letter1 && root[0] !== letter1) return false;
       if (letter2 && root[1] !== letter2) return false;
       if (letter3 && root[2] !== letter3) return false;
     }
 
-    // Letter filters for quadrilateral
     if (cat === 'quadri' && rootLength === 4) {
       if (letter1 && root[0] !== letter1) return false;
       if (letter3 && root[3] !== letter3) return false;
@@ -432,10 +441,40 @@ function applyFilters() {
       }
     }
 
-    // Vowel‑only filter
+    // Vowel filter
     if (cat === 'tri' && showVowelOnly) {
-      const hasVowel = /[اوي]/.test(r[FIELD.verb]);
-      if (!hasVowel) return false;
+      const isVowel = (ch) => /[اوي]/.test(ch);
+      const matchesType = (ch) => {
+        if (!vowelType) return isVowel(ch);
+        if (vowelType === 'o') return ch === 'و';
+        if (vowelType === 'i') return ch === 'ي';
+        return false;
+      };
+
+      if (vowelPosition === 'start') {
+        if (!matchesType(root[0])) return false;
+      } 
+      else if (vowelPosition === 'middle') {
+        if (!matchesType(root[1])) return false;
+      }
+      else if (vowelPosition === 'end') {
+        if (!matchesType(root[2])) return false;
+      }
+      else if (vowelPosition === 'double') {
+        // At least two vowels must exist
+        const vowelCount = [root[0], root[1], root[2]].filter(isVowel).length;
+        if (vowelCount < 2) return false;
+
+        const middleIsVowel = isVowel(root[1]);
+        if (vowelPattern === 'grouped') {
+          if (!middleIsVowel) return false;
+        } else if (vowelPattern === 'seperate') {
+          if (middleIsVowel) return false;
+        }
+      }
+      else {
+        if (!/[اوي]/.test(root)) return false;
+      }
     }
 
     return true;
@@ -443,8 +482,7 @@ function applyFilters() {
 
   if (sort.index != null) {
     const key = COLS[sort.index].sortKey;
-    filtered.sort((a, b) =>
-      sort.dir * String(key(a)).localeCompare(String(key(b)), 'ar', { numeric: true }));
+    filtered.sort((a, b) => sort.dir * String(key(a)).localeCompare(String(key(b)), 'ar', { numeric: true }));
   }
 
   table.setRows(filtered);
