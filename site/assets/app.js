@@ -98,7 +98,7 @@ function populateLetterDropdowns() {
     const select = document.getElementById(selectId);
     if (select) {
       const currentValue = select.value;
-      select.innerHTML = '<option value="">Select letter</option>';
+      select.innerHTML = '<option value="">اختر حرفًا</option>';
       letters.forEach(letter => {
         const option = document.createElement('option');
         option.value = letter;
@@ -187,9 +187,9 @@ function updateList5() {
 
   if (cat === 'tri') {
     list5.innerHTML = `
-      <p>Starts with <select id="letter1"></select></p>
-      <p>Middle letter <select id="letter2"></select></p>
-      <p>Ends with <select id="letter3"></select></p>
+      <p>الحرف الأول <select id="letter1"></select></p>
+      <p>الحرف الأوسط <select id="letter2"></select></p>
+      <p>الحرف الأخير <select id="letter3"></select></p>
       <label class="switch">
         <input type="checkbox" id="vowelToggle">
         <span class="slider"></span>
@@ -207,10 +207,10 @@ function updateList5() {
 
   } else if (cat === 'quadri') {
     list5.innerHTML = `
-      <p>Starts with <select id="letter1"></select></p>
-      <p>Ends with <select id="letter3"></select></p>
+      <p>الحرف الأول <select id="letter1"></select></p>
+      <p>الحرف الأخير <select id="letter3"></select></p>
       <label>
-        <input type="checkbox" id="doubleToggle"> ?Double
+        <input type="checkbox" id="doubleToggle">مضاعَف؟
       </label>
     `;
     populateLetterDropdowns();
@@ -242,30 +242,28 @@ function updateList6() {
 
   if (isChecked) {
     list6.innerHTML = `
-      <p>Where is the vowel 
+      <p>موقع حرف العلة 
         <select id="vowelPositionSelect">
-          <option value="">Select position</option>
-          <option value="start">Start</option>
-          <option value="middle">Middle</option>
-          <option value="end">End</option>
-          <option value="double">Double</option>
+          <option value="">اختر موقعًا</option>
+          <option value="start">مثال (أول الجذر)</option>
+          <option value="middle">أجوف (وسط الجذر)</option>
+          <option value="end">ناقص (آخر الجذر)</option>
+          <option value="double">لفيف (فيه حرفا علة)</option>
         </select>
       </p>
-      <p>What vowel 
+      <p>حرف العلة  
         <select id="vowelTypeSelect">
-          <option value="">Select vowel</option>
-          <option value="o">O (و)</option>
-          <option value="i">I (ي)</option>
-          <option value="both">Both</option>
+          <option value="">اختر حرفًا</option>
+          <option value="o">الواو</option>
+          <option value="i">الياء</option>
         </select>
       </p>
       <div id="patternContainer" style="display: none;">
-        <p>Position pattern 
+        <p>نوع اللفيف 
           <select id="vowelPatternSelect">
-            <option value="">Select pattern</option>
-            <option value="12">1, 2</option>
-            <option value="13">1, 3</option>
-            <option value="23">2, 3</option>
+            <option value="">اختر نوعًا</option>
+            <option value="grouped">مقرون</option>
+            <option value="seperate">مفروق</option>
           </select>
         </p>
       </div>
@@ -305,18 +303,18 @@ function updateList7() {
 
   if (deriv === "deriv") {
     html = `
-      <p>1+
-        <input type="checkbox" id="plusOne">
+      <p>
+        <input type="checkbox" id="plusOne">بحرف
       </p>
-      <p>2+
-        <input type="checkbox" id="plusTwo">
+      <p>
+        <input type="checkbox" id="plusTwo">بحرفين
       </p>
     `;
 
     if (cat === "tri") {
       html += `
-        <p>3+
-          <input type="checkbox" id="plusThree">
+        <p>
+          <input type="checkbox" id="plusThree">بثلاثة أحرف
         </p>
       `;
     }
