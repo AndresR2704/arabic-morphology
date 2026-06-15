@@ -171,6 +171,8 @@ function updateList8() {
     cb.removeEventListener('change', applyFilters);
     cb.addEventListener('change', applyFilters);
   });
+
+  updateControlBoxBorders();
 }
 
 // UpdateList5 function
