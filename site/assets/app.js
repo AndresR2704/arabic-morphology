@@ -234,8 +234,13 @@ function updateList5() {
 // UpdateList6 function
 function updateList6() {
   const vowelToggle = document.getElementById('vowelToggle');
-  if (!vowelToggle) return;
-
+  if (!vowelToggle) {
+    const list6 = document.getElementById('list6');
+    if (list6) list6.innerHTML = '';
+    applyFilters();
+    updateControlBoxBorders();
+    return;
+  }
   const isChecked = vowelToggle.checked;
   const list6 = document.getElementById('list6');
   if (!list6) return;
@@ -257,7 +262,11 @@ function updateList6() {
           <option value="">اختر حرفًا</option>
           <option value="o">الواو</option>
           <option value="i">الياء</option>
-        </select>
+        </select><br>
+        <label><input type="checkbox" id="Opt40">مهموز الفاء</label><br>
+        <label><input type="checkbox" id="Opt41">مهموز العين</label><br>
+        <label><input type="checkbox" id="Opt42">مهموز الفاء</label><br>
+        <label><input type="checkbox" id="Opt43">مُضعَّف</label>
       </p>
       <div id="patternContainer" style="display: none;">
         <p>نوع اللفيف 
@@ -276,11 +285,9 @@ function updateList6() {
 
     function handlePositionChange() {
       const isDouble = vowelPosition.value === 'double';
-      // Show/hide vowel type container
       if (vowelTypeContainer) {
         vowelTypeContainer.style.display = isDouble ? 'none' : '';
       }
-      // Show/hide pattern container
       if (patternContainer) {
         patternContainer.style.display = isDouble ? 'block' : 'none';
       }
@@ -289,7 +296,6 @@ function updateList6() {
 
     if (vowelPosition) {
       vowelPosition.addEventListener('change', handlePositionChange);
-      // Also call once to set initial visibility
       handlePositionChange();
     }
 
@@ -298,12 +304,29 @@ function updateList6() {
 
     if (vowelType) vowelType.addEventListener('change', applyFilters);
     if (vowelPattern) vowelPattern.addEventListener('change', applyFilters);
-
+    updateControlBoxBorders();
   } else {
-    list6.innerHTML = '';
-    applyFilters();
+    list6.innerHTML = `
+      <label><input type="checkbox" id="Opt40">مهموز الفاء</label><br>
+      <label><input type="checkbox" id="Opt41">مهموز العين</label><br>
+      <label><input type="checkbox" id="Opt42">مهموز الفاء</label><br>
+      <label><input type="checkbox" id="Opt43">مُضعَّف</label>
+    `;
+    updateControlBoxBorders();
+    
   }
-  updateControlBoxBorders();
+
+  const opt40 = document.getElementById('Opt40');
+  const opt41 = document.getElementById('Opt41');
+  const opt42 = document.getElementById('Opt42');
+  const opt43 = document.getElementById('Opt43');
+  
+  if (opt40) opt40.addEventListener('change', applyFilters);
+  if (opt41) opt41.addEventListener('change', applyFilters);
+  if (opt42) opt42.addEventListener('change', applyFilters);
+  if (opt43) opt43.addEventListener('change', applyFilters);
+
+  applyFilters();
 }
 
 // Update list7 
@@ -415,6 +438,11 @@ function applyFilters() {
   const vowelType = document.getElementById('vowelTypeSelect')?.value || '';
   const vowelPattern = document.getElementById('vowelPatternSelect')?.value || '';
 
+  const opt40 = document.getElementById('Opt40')?.checked || false;
+  const opt41 = document.getElementById('Opt41')?.checked || false;
+  const opt42 = document.getElementById('Opt42')?.checked || false;
+  const opt43 = document.getElementById('Opt43')?.checked || false;
+
   const filtered = ALL.filter((r) => {
     if (cat && r[FIELD.cat] !== cat) return false;
     if (deriv && r[FIELD.deriv] !== deriv) return false;
@@ -441,9 +469,9 @@ function applyFilters() {
       }
     }
 
-    // Vowel filter
+    // Vowel filter (only for trilateral)
     if (cat === 'tri' && showVowelOnly) {
-      const isVowel = (ch) => /[اوي]/.test(ch);
+      const isVowel = (ch) => /[وي]/.test(ch);
       const matchesType = (ch) => {
         if (!vowelType) return isVowel(ch);
         if (vowelType === 'o') return ch === 'و';
@@ -451,20 +479,24 @@ function applyFilters() {
         return false;
       };
 
+      function isOnlyVowelAt(pos) {
+        const vowelPositions = [0, 1, 2].filter(i => isVowel(root[i]));
+        if (vowelPositions.length !== 1) return false;
+        return vowelPositions[0] === pos && matchesType(root[pos]);
+      }
+
       if (vowelPosition === 'start') {
-        if (!matchesType(root[0])) return false;
-      } 
+        if (!isOnlyVowelAt(0)) return false;
+      }
       else if (vowelPosition === 'middle') {
-        if (!matchesType(root[1])) return false;
+        if (!isOnlyVowelAt(1)) return false;
       }
       else if (vowelPosition === 'end') {
-        if (!matchesType(root[2])) return false;
+        if (!isOnlyVowelAt(2)) return false;
       }
       else if (vowelPosition === 'double') {
-        // At least two vowels must exist
         const vowelCount = [root[0], root[1], root[2]].filter(isVowel).length;
         if (vowelCount < 2) return false;
-
         const middleIsVowel = isVowel(root[1]);
         if (vowelPattern === 'grouped') {
           if (!middleIsVowel) return false;
@@ -473,8 +505,15 @@ function applyFilters() {
         }
       }
       else {
-        if (!/[اوي]/.test(root)) return false;
+        if (!/[وي]/.test(root)) return false;
       }
+    }
+
+    if (rootLength >= 3) {
+      if (opt40 && root[0] !== 'أ') return false;
+      if (opt41 && root[1] !== 'أ') return false;
+      if (opt42 && root[2] !== 'أ') return false;
+      if (opt43 && root[1] !== root[2]) return false;
     }
 
     return true;
