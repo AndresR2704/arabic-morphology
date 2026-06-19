@@ -83,7 +83,6 @@ async function init() {
     els.vowelPosition.addEventListener('change', updateSVGLineColors);
   }
 
-  // ★ ADD THIS: Listen for radio changes inside list6
   const list6 = document.getElementById('list6');
   list6.addEventListener('change', function(e) {
     if (e.target.matches('input[name="hamzahDouble"]')) {
