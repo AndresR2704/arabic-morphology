@@ -12,6 +12,9 @@ const arNum = (n) => n.toLocaleString('en-US');
 
 const list8Options = ['فعَل يفعُل', 'فعَل يفعِل', 'فعَل يفعَل', 'فعِل يفعَل', 'فعُل يفعُل', 'فعِل يفعِل', 'فعلل', 'أفعل', 'فعّل', 'فاعل', 'تفعّل', 'تفاعل', 'افتعل', 'انفعل', 'افعلّ', 'استفعل', 'افعوعل', 'افعوّل', 'افعالّ', 'تفعلل', 'افعنلل', 'افعللّ'];
 
+let circle1 = null;
+let circle2 = null;
+
 const els = {
   search: document.getElementById('search'),
   cat: document.getElementById('filterCat'),
@@ -75,7 +78,8 @@ async function init() {
   els.trans.addEventListener('change', applyFilters);
   els.reset.addEventListener('click', resetFilters);
 
-  await inlineSVG();
+  circle1 = await loadCircle1SVG();
+  circle2 = await loadCircle2SVG();
 
   if (els.vowelPosition) {
     els.vowelPosition.addEventListener('change', updateSVGLineColors);
@@ -234,99 +238,176 @@ function updateList5() {
 // UpdateList6 function
 function updateList6() {
   const vowelToggle = document.getElementById('vowelToggle');
-  if (!vowelToggle) {
-    const list6 = document.getElementById('list6');
-    if (list6) list6.innerHTML = '';
-    applyFilters();
-    updateControlBoxBorders();
-    return;
-  }
-  const isChecked = vowelToggle.checked;
   const list6 = document.getElementById('list6');
   if (!list6) return;
 
-  if (isChecked) {
-    list6.innerHTML = `
-      <p>موقع حرف العلة 
-        <select id="vowelPositionSelect">
-          <option value="">اختر موقعًا</option>
-          <option value="start">مثال (أول الجذر)</option>
-          <option value="middle">أجوف (وسط الجذر)</option>
-          <option value="end">ناقص (آخر الجذر)</option>
-          <option value="double">لفيف (فيه حرفا علة)</option>
-        </select>
-      </p>
-      <p id="vowelTypeContainer">
-        حرف العلة  
-        <select id="vowelTypeSelect">
-          <option value="">اختر حرفًا</option>
-          <option value="o">الواو</option>
-          <option value="i">الياء</option>
-        </select><br>
-        <label><input type="checkbox" id="Opt40">مهموز الفاء</label><br>
-        <label><input type="checkbox" id="Opt41">مهموز العين</label><br>
-        <label><input type="checkbox" id="Opt42">مهموز اللام</label><br>
-        <label><input type="checkbox" id="Opt43">مُضعَّف</label>
-      </p>
-      <div id="patternContainer" style="display: none;">
-        <p>نوع اللفيف 
-          <select id="vowelPatternSelect">
-            <option value="">اختر نوعًا</option>
-            <option value="grouped">مقرون</option>
-            <option value="seperate">مفروق</option>
-          </select>
-        </p>
-      </div>
-    `;
-
-    const vowelPosition = document.getElementById('vowelPositionSelect');
-    const vowelTypeContainer = document.getElementById('vowelTypeContainer');
-    const patternContainer = document.getElementById('patternContainer');
-
-    function handlePositionChange() {
-      const isDouble = vowelPosition.value === 'double';
-      if (vowelTypeContainer) {
-        vowelTypeContainer.style.display = isDouble ? 'none' : '';
-      }
-      if (patternContainer) {
-        patternContainer.style.display = isDouble ? 'block' : 'none';
-      }
-      applyFilters();
-    }
-
-    if (vowelPosition) {
-      vowelPosition.addEventListener('change', handlePositionChange);
-      handlePositionChange();
-    }
-
-    const vowelType = document.getElementById('vowelTypeSelect');
-    const vowelPattern = document.getElementById('vowelPatternSelect');
-
-    if (vowelType) vowelType.addEventListener('change', applyFilters);
-    if (vowelPattern) vowelPattern.addEventListener('change', applyFilters);
-    updateControlBoxBorders();
-  } else {
+  // ---------- Vowel toggle OFF ----------
+  if (!vowelToggle || !vowelToggle.checked) {
     list6.innerHTML = `
       <label><input type="checkbox" id="Opt40">مهموز الفاء</label><br>
       <label><input type="checkbox" id="Opt41">مهموز العين</label><br>
       <label><input type="checkbox" id="Opt42">مهموز اللام</label><br>
       <label><input type="checkbox" id="Opt43">مُضعَّف</label>
     `;
+    list6.querySelectorAll('input[type="checkbox"]').forEach(el => {
+      el.removeEventListener('change', applyFilters);
+      el.addEventListener('change', applyFilters);
+    });
+    applyFilters();
     updateControlBoxBorders();
-    
+    return;
   }
 
-  const opt40 = document.getElementById('Opt40');
-  const opt41 = document.getElementById('Opt41');
-  const opt42 = document.getElementById('Opt42');
-  const opt43 = document.getElementById('Opt43');
-  
-  if (opt40) opt40.addEventListener('change', applyFilters);
-  if (opt41) opt41.addEventListener('change', applyFilters);
-  if (opt42) opt42.addEventListener('change', applyFilters);
-  if (opt43) opt43.addEventListener('change', applyFilters);
+  // ---------- Vowel toggle ON ----------
+  list6.innerHTML = `
+    <p>موقع حرف العلة 
+      <select id="vowelPositionSelect">
+        <option value="">اختر موقعًا</option>
+        <option value="start">مثال (أول الجذر)</option>
+        <option value="middle">أجوف (وسط الجذر)</option>
+        <option value="end">ناقص (آخر الجذر)</option>
+        <option value="double">لفيف (فيه حرفا علة)</option>
+      </select>
+    </p>
+    <div id="vowelTypeContainer" style="display:none;">
+      <p>
+        حرف العلة  
+        <select id="vowelTypeSelect">
+          <option value="">اختر حرفًا</option>
+          <option value="o">الواو</option>
+          <option value="i">الياء</option>
+        </select>
+      </p>
+      <div id="wrapOpt40"><label><input type="checkbox" id="Opt40">مهموز الفاء</label></div>
+      <div id="wrapOpt41"><label><input type="checkbox" id="Opt41">مهموز العين</label></div>
+      <div id="wrapOpt42"><label><input type="checkbox" id="Opt42">مهموز اللام</label></div>
+      <div id="wrapOpt43"><label><input type="checkbox" id="Opt43">مُضعَّف</label></div>
+    </div>
+    <div id="patternContainer" style="display: none;">
+      <p>نوع اللفيف 
+        <select id="vowelPatternSelect">
+          <option value="">اختر نوعًا</option>
+          <option value="grouped">مقرون</option>
+          <option value="seperate">مفروق</option>
+        </select>
+      </p>
+      <div id="wrapOpt40p"><label><input type="checkbox" id="Opt40">مهموز الفاء</label></div>
+      <div id="wrapOpt41p"><label><input type="checkbox" id="Opt41">مهموز العين</label></div>
+    </div>
+  `;
 
-  applyFilters();
+  // ----- Grab elements -----
+  const vowelPosition = document.getElementById('vowelPositionSelect');
+  const vowelTypeContainer = document.getElementById('vowelTypeContainer');
+  const patternContainer = document.getElementById('patternContainer');
+  const vowelType = document.getElementById('vowelTypeSelect');
+  const vowelPattern = document.getElementById('vowelPatternSelect');
+
+  // Update checkbox visibility in vowel-type container (no gaps because we hide the entire div wrapper)
+  function updateVowelCheckboxes(position) {
+    const w40 = document.getElementById('wrapOpt40');
+    const w41 = document.getElementById('wrapOpt41');
+    const w42 = document.getElementById('wrapOpt42');
+    const w43 = document.getElementById('wrapOpt43');
+    if (!w40) return;
+
+    // Hide all wrappers first (removes their space completely)
+    w40.style.display = 'none';
+    w41.style.display = 'none';
+    w42.style.display = 'none';
+    w43.style.display = 'none';
+
+    if (position === 'start') {
+      w41.style.display = ''; // Opt41
+      w42.style.display = ''; // Opt42
+      w43.style.display = ''; // Opt43
+    } else if (position === 'middle') {
+      w40.style.display = ''; // Opt40
+      w42.style.display = ''; // Opt42
+    } else if (position === 'end') {
+      w40.style.display = ''; // Opt40
+      w41.style.display = ''; // Opt41
+    }
+    // For empty or double: all remain hidden
+  }
+
+  // Update checkbox visibility in pattern container (no gaps)
+  function updatePatternCheckboxes(pattern) {
+    const w40p = document.getElementById('wrapOpt40p');
+    const w41p = document.getElementById('wrapOpt41p');
+    if (!w40p) return;
+
+    w40p.style.display = 'none';
+    w41p.style.display = 'none';
+
+    if (pattern === 'grouped') {
+      w40p.style.display = '';
+    } else if (pattern === 'seperate') {
+      w41p.style.display = '';
+    }
+  }
+
+  // Main handler for position change
+  function handlePositionChange() {
+    const val = vowelPosition ? vowelPosition.value : '';
+
+    // Toggle container visibility
+    if (vowelTypeContainer) {
+      vowelTypeContainer.style.display = (val && val !== 'double') ? '' : 'none';
+    }
+    if (patternContainer) {
+      patternContainer.style.display = (val === 'double') ? 'block' : 'none';
+    }
+
+    // Update checkboxes inside vowel-type container
+    updateVowelCheckboxes(val);
+
+    // Handle pattern container checkboxes
+    if (val === 'double' && vowelPattern) {
+      updatePatternCheckboxes(vowelPattern.value);
+    } else {
+      // Hide pattern checkboxes if not in double mode
+      const w40p = document.getElementById('wrapOpt40p');
+      const w41p = document.getElementById('wrapOpt41p');
+      if (w40p) w40p.style.display = 'none';
+      if (w41p) w41p.style.display = 'none';
+    }
+
+    applyFilters();
+  }
+
+  // Handler for pattern dropdown change
+  function handlePatternChange() {
+    if (vowelPosition && vowelPosition.value === 'double') {
+      updatePatternCheckboxes(vowelPattern.value);
+      applyFilters();
+    }
+  }
+
+  // Attach events
+  if (vowelPosition) {
+    vowelPosition.removeEventListener('change', handlePositionChange);
+    vowelPosition.addEventListener('change', handlePositionChange);
+    handlePositionChange(); // apply initial state
+  }
+
+  if (vowelPattern) {
+    vowelPattern.removeEventListener('change', handlePatternChange);
+    vowelPattern.addEventListener('change', handlePatternChange);
+  }
+
+  if (vowelType) {
+    vowelType.removeEventListener('change', applyFilters);
+    vowelType.addEventListener('change', applyFilters);
+  }
+
+  // Attach to all checkboxes inside list6
+  list6.querySelectorAll('input[type="checkbox"]').forEach(el => {
+    el.removeEventListener('change', applyFilters);
+    el.addEventListener('change', applyFilters);
+  });
+
+  updateControlBoxBorders();
 }
 
 // Update list7 
@@ -415,7 +496,18 @@ function columns() {
   ];
 }
 
+function getCheckedState(id) {
+  const elements = document.querySelectorAll(`#${id}`);
+  for (const el of elements) {
+    if (el.offsetParent !== null) { // visible
+      return el.checked;
+    }
+  }
+  return false; // fallback
+}
+
 function applyFilters() {
+  SVGFilters();
   const q = normalizeArabic(els.search.value);
   const cat = els.cat.value;
   const deriv = els.deriv.value;
@@ -438,10 +530,10 @@ function applyFilters() {
   const vowelType = document.getElementById('vowelTypeSelect')?.value || '';
   const vowelPattern = document.getElementById('vowelPatternSelect')?.value || '';
 
-  const opt40 = document.getElementById('Opt40')?.checked || false;
-  const opt41 = document.getElementById('Opt41')?.checked || false;
-  const opt42 = document.getElementById('Opt42')?.checked || false;
-  const opt43 = document.getElementById('Opt43')?.checked || false;
+  const opt40 = getCheckedState('Opt40');
+  const opt41 = getCheckedState('Opt41');
+  const opt42 = getCheckedState('Opt42');
+  const opt43 = getCheckedState('Opt43');
 
   const filtered = ALL.filter((r) => {
     if (cat && r[FIELD.cat] !== cat) return false;
@@ -472,6 +564,7 @@ function applyFilters() {
     // Vowel filter (only for trilateral)
     if (cat === 'tri' && showVowelOnly) {
       const isVowel = (ch) => /[وي]/.test(ch);
+      setOpacityByID(circle2, "Vowel", 1.0);
       const matchesType = (ch) => {
         if (!vowelType) return isVowel(ch);
         if (vowelType === 'o') return ch === 'و';
@@ -638,3 +731,249 @@ document.querySelectorAll('.modal-option').forEach(button => {
     }
   });
 });
+
+
+
+
+
+
+
+
+
+
+// SVG functions
+async function loadCircle1SVG() {
+  try {
+    const response = await fetch('Circle 1.svg');
+    const svgText = await response.text();
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+    const svg = svgDoc.documentElement;
+
+    const imageContainer = document.querySelector('.image-container');
+    if (imageContainer) {
+      const imgTag = imageContainer.querySelector('img[src="Circle 1.svg"]');
+      if (imgTag) {
+        const originalWidth = imgTag.getAttribute('width');
+        const originalHeight = imgTag.getAttribute('height');
+        if (originalWidth) svg.setAttribute('width', originalWidth);
+        if (originalHeight) svg.setAttribute('height', originalHeight);
+        imgTag.replaceWith(svg);
+      } else {
+        imageContainer.appendChild(svg);
+      }
+    }
+    console.log('Circle 1.svg loaded and injected successfully');
+    return svg;
+  } catch (error) {
+    console.error('Error loading Circle 1.svg:', error);
+    return null;
+  }
+}
+
+async function loadCircle2SVG() {
+  try {
+    const response = await fetch('Circle 2.svg');
+    const svgText = await response.text();
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+    const svg = svgDoc.documentElement;
+
+    const imageContainer = document.querySelector('.image-container');
+    if (imageContainer) {
+      const imgTag = imageContainer.querySelector('img[src="Circle 2.svg"]');
+      if (imgTag) {
+        const originalWidth = imgTag.getAttribute('width');
+        const originalHeight = imgTag.getAttribute('height');
+        if (originalWidth) svg.setAttribute('width', originalWidth);
+        if (originalHeight) svg.setAttribute('height', originalHeight);
+        imgTag.replaceWith(svg);
+      } else {
+        imageContainer.appendChild(svg);
+      }
+    }
+    console.log('Circle 2.svg loaded and injected successfully');
+    return svg;
+  } catch (error) {
+    console.error('Error loading Circle 2.svg:', error);
+    return null;
+  }
+}
+
+function setOpacityByID(svg, id) {
+  if (!svg) {
+    console.warn('SVG element not provided.');
+    return;
+  }
+
+  const element = svg.getElementById(id);
+  if (!element) {
+    console.warn(`No element found with id="${id}"`);
+    return;
+  }
+
+  element.style.opacity = 1;
+}
+
+function resetGroupOpacity(svg, groupId) {
+  if (!svg) {
+    console.warn('SVG element not provided.');
+    return;
+  }
+
+  const group = svg.getElementById(groupId);
+  if (!group) {
+    console.warn(`Group with id="${groupId}" not found.`);
+    return;
+  }
+
+  const children = group.children;
+  if (children.length === 0) {
+    console.warn(`Group "${groupId}" has no children.`);
+    return;
+  }
+
+  for (let i = 0; i < children.length; i++) {
+    children[i].style.opacity = 0;
+  }
+}
+
+function SVGFilters(){
+  resetGroupOpacity(circle2, "Highlight");
+  const q = normalizeArabic(els.search.value);
+  const cat = els.cat.value;
+  const deriv = els.deriv.value;
+  const trans = els.trans.value;
+
+  const selectedPatterns = Array.from(document.querySelectorAll('#list8 input[type="checkbox"]:checked'))
+                                 .map(cb => cb.value);
+
+  const letter1 = document.getElementById('letter1')?.value || '';
+  const letter2 = document.getElementById('letter2')?.value || '';
+  const letter3 = document.getElementById('letter3')?.value || '';
+
+  const vowelToggle = document.getElementById('vowelToggle');
+  const showVowelOnly = vowelToggle ? vowelToggle.checked : false;
+
+  const doubleToggle = document.getElementById('doubleToggle');
+  const doubleChecked = doubleToggle ? doubleToggle.checked : false;
+
+  const vowelPosition = document.getElementById('vowelPositionSelect')?.value || '';
+  const vowelType = document.getElementById('vowelTypeSelect')?.value || '';
+  const vowelPattern = document.getElementById('vowelPatternSelect')?.value || '';
+
+  const opt40 = getCheckedState('Opt40');
+  const opt41 = getCheckedState('Opt41');
+  const opt42 = getCheckedState('Opt42');
+  const opt43 = getCheckedState('Opt43');
+
+  if (cat === "tri"){
+    if (showVowelOnly){
+      setOpacityByID(circle2, "Vowel");
+
+      if(vowelPosition === 'start'){
+        setOpacityByID(circle2, "V1");
+        if (vowelType === 'o'){
+          setOpacityByID(circle2, "V1-1");
+          if (opt42){
+            setOpacityByID(circle2, "V1-1-1");
+          }
+          if (opt43){
+            setOpacityByID(circle2, "V1-1-2");
+          }
+          if (opt41){
+            setOpacityByID(circle2, "V1-1-3");
+          }
+
+        } else if (vowelType === 'i'){
+          setOpacityByID(circle2, "V1-2")
+          if (opt43){
+            setOpacityByID(circle2, "V1-2-1");
+          }
+          if (opt41){
+            setOpacityByID(circle2, "V1-2-2");
+          }
+        }
+
+      } else if (vowelPosition === 'middle'){
+        setOpacityByID(circle2, "V2");
+        if (vowelType === 'o'){
+          setOpacityByID(circle2, "V2-1");
+          if (opt42){
+            setOpacityByID(circle2, "V2-1-1");
+          }
+          if (opt40){
+            setOpacityByID(circle2, "V2-1-2");
+          }
+
+        } else if (vowelType === 'i'){
+          setOpacityByID(circle2, "V2-2")
+          if (opt42){
+            setOpacityByID(circle2, "V2-2-2");
+          }
+          if (opt40){
+            setOpacityByID(circle2, "V2-2-1");
+          }
+        }
+
+      } else if (vowelPosition === 'end'){
+        setOpacityByID(circle2, "V3");
+        if (vowelType === 'o'){
+          setOpacityByID(circle2, "V3-1");
+          if (opt40){
+            setOpacityByID(circle2, "V3-1-1");
+          }
+          if (opt41){
+            setOpacityByID(circle2, "V3-1-2");
+          }
+
+        } else if (vowelType === 'i'){
+          setOpacityByID(circle2, "V3-2")
+          if (opt40){
+            setOpacityByID(circle2, "V3-2-1");
+          }
+          if (opt41){
+            setOpacityByID(circle2, "V3-2-2");
+          }
+        }
+
+      } else if (vowelPosition === 'double'){
+        setOpacityByID(circle2, "V4");
+        if (vowelPattern === "seperate"){
+          setOpacityByID(circle2, "V4-1");
+          if (opt41){
+            setOpacityByID(circle2, "V4-1-1");
+          }
+        } else if (vowelPattern === "grouped"){
+          setOpacityByID(circle2, "V4-2");
+          if (opt40){
+            setOpacityByID(circle2, "V4-2-1");
+          }
+        }
+      }
+    } else {
+      setOpacityByID(circle2, "No-vowel");
+      if (!opt40 && !opt41 && !opt42 && !opt43){
+        setOpacityByID(circle2, "NV3");
+      } else {
+        if (opt40){
+          setOpacityByID(circle2, "NV2");
+          if(opt42){
+            setOpacityByID(circle2, "NV2-4");
+          } else if (!opt41){
+            setOpacityByID(circle2, "NV2-3");
+            if (opt43){
+              setOpacityByID(circle2, "NV2-3-1");
+            }
+          }
+        } else if (opt41){
+          setOpacityByID(circle2, "NV2-2");
+        } else if (opt42){
+          setOpacityByID(circle2, "NV2-1");
+        } else if (opt43){
+          setOpacityByID(circle2, "NV1");
+        }
+      }
+    }
+  }
+}
