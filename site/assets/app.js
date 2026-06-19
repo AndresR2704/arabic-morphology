@@ -973,8 +973,10 @@ function SVGFilters(){
             }
           }
         } else if (opt41){
+          setOpacityByID(circle2, "NV2");
           setOpacityByID(circle2, "NV2-2");
         } else if (opt42){
+          setOpacityByID(circle2, "NV2");
           setOpacityByID(circle2, "NV2-1");
         } else if (opt43){
           setOpacityByID(circle2, "NV1");
