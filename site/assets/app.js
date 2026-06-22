@@ -252,7 +252,7 @@ function updateList6() {
       <div id="noVowelControls">
         <p>
           <select id="NVType">
-            <option value="">SeletNVType</option>
+            <option value="">اختر نوع الفعل الصحيح</option>
             <option value="opt1">مهموز</option>
             <option value="opt2">مُضعَّف</option>
             <option value="opt3">سالم</option>
