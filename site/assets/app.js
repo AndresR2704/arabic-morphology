@@ -19,7 +19,6 @@ const els = {
   search: document.getElementById('search'),
   cat: document.getElementById('filterCat'),
   deriv: document.getElementById('filterDeriv'),
-  // pattern dropdown removed – using checkboxes in #list8
   trans: document.getElementById('filterTrans'),
   reset: document.getElementById('resetFilters'),
   counter: document.getElementById('counter'),
@@ -32,7 +31,7 @@ let ALL = [];
 let table = null;
 let COLS = [];
 const sort = { index: null, dir: 1 };
-let allPatterns = []; // Store all original patterns
+let allPatterns = [];
 
 init();
 
@@ -64,14 +63,20 @@ async function init() {
   const onChange = debounce(applyFilters, 120);
   els.search.addEventListener('input', onChange);
 
-  [els.cat, els.deriv].forEach((s) =>
-    s.addEventListener('change', () => {
-      updateList5();
-      updateList7();
-      updateList8();
-      applyFilters();
-      updateControlBoxBorders();
-    }));
+  els.cat.addEventListener('change', () => {
+    updateList5();  
+    updateList7();
+    updateList8();
+    applyFilters();
+    updateControlBoxBorders();
+  });
+
+  els.deriv.addEventListener('change', () => {
+    updateList7();
+    updateList8();
+    applyFilters();
+    updateControlBoxBorders();
+  });
 
   els.trans.addEventListener('change', applyFilters);
   els.reset.addEventListener('click', resetFilters);
@@ -83,26 +88,17 @@ async function init() {
     els.vowelPosition.addEventListener('change', updateSVGLineColors);
   }
 
-  const list6 = document.getElementById('list6');
-  list6.addEventListener('change', function(e) {
-    if (e.target.matches('input[name="hamzahDouble"]')) {
-      applyFilters();
-    }
-  });
-
-  // Initialize dynamic filters
+  // Initial build
   updateList5();
   updateList7();
   applyFilters();
   updateControlBoxBorders();
 }
 
-// Function to populate letter dropdowns
+// ----- Helper: populate letter dropdowns -----
 function populateLetterDropdowns() {
   const letters = ['أ','ب','ت','ث','ج','ح','خ','د','ذ','ر','ز','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ك','ل','م','ن','ه','و','ي'];
-
   const letterSelects = ['letter1', 'letter2', 'letter3'];
-
   letterSelects.forEach(selectId => {
     const select = document.getElementById(selectId);
     if (select) {
@@ -119,11 +115,11 @@ function populateLetterDropdowns() {
   });
 }
 
-// Function to populate list8 with checkboxes
+// ----- Update list8 (pattern checkboxes) -----
 function updateList8() {
   const container = document.getElementById('list8');
   if (!container) return;
-  container.innerHTML = '';   // clear previous checkboxes
+  container.innerHTML = '';
 
   const cat = els.cat?.value || '';
   const deriv = els.deriv?.value || '';
@@ -175,7 +171,7 @@ function updateList8() {
       hasOptions = true;
     }
   }
-  // Add event listeners to new checkboxes
+
   container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
     cb.removeEventListener('change', applyFilters);
     cb.addEventListener('change', applyFilters);
@@ -184,14 +180,14 @@ function updateList8() {
   updateControlBoxBorders();
 }
 
-// UpdateList5 function
+// ----- Update list5 (root letters and vowel toggle) -----
 function updateList5() {
   const cat = els.cat?.value || '';
   const list5 = document.getElementById('list5');
   const list6 = document.getElementById('list6');
-
   if (!list5) return;
 
+  // Clear list6 for a fresh start
   if (list6) list6.innerHTML = '';
 
   if (cat === 'tri') {
@@ -206,12 +202,14 @@ function updateList5() {
     `;
     populateLetterDropdowns();
 
+    // Attach listener to vowel toggle
     const vowelToggle = document.getElementById('vowelToggle');
     if (vowelToggle) {
-      const newToggle = vowelToggle.cloneNode(true);
-      vowelToggle.parentNode.replaceChild(newToggle, vowelToggle);
-      newToggle.addEventListener('change', updateList6);
+      // Remove any existing listener to avoid duplicates
+      vowelToggle.removeEventListener('change', updateList6);
+      vowelToggle.addEventListener('change', updateList6);
     }
+
     updateList6();
 
   } else if (cat === 'quadri') {
@@ -226,21 +224,23 @@ function updateList5() {
 
     const doubleToggle = document.getElementById('doubleToggle');
     if (doubleToggle) {
-      const newDoubleToggle = doubleToggle.cloneNode(true);
-      doubleToggle.parentNode.replaceChild(newDoubleToggle, doubleToggle);
-      newDoubleToggle.addEventListener('change', applyFilters);
+      doubleToggle.removeEventListener('change', applyFilters);
+      doubleToggle.addEventListener('change', applyFilters);
     }
+
+    // For quadri, list6 is empty
     if (list6) list6.innerHTML = '';
 
   } else {
     list5.innerHTML = '';
+    if (list6) list6.innerHTML = '';
     return;
   }
 
   attachLetterListeners();
 }
 
-// UpdateList6 function
+// ----- Update list6 (vowel‑related controls) -----
 function updateList6() {
   const vowelToggle = document.getElementById('vowelToggle');
   const list6 = document.getElementById('list6');
@@ -249,19 +249,62 @@ function updateList6() {
   // ---------- Vowel toggle OFF ----------
   if (!vowelToggle || !vowelToggle.checked) {
     list6.innerHTML = `
-      <div id="hamzahDoubleGroupOff">
-        <div><label><input type="radio" name="hamzahDouble" value="" checked>الكل</label></div>
-        <div id="wrapOpt40"><label><input type="radio" name="hamzahDouble" value="opt40"> مهموز الفاء</label></div>
-        <div id="wrapOpt41"><label><input type="radio" name="hamzahDouble" value="opt41"> مهموز العين</label></div>
-        <div id="wrapOpt42"><label><input type="radio" name="hamzahDouble" value="opt42"> مهموز اللام</label></div>
-        <div id="wrapOpt43"><label><input type="radio" name="hamzahDouble" value="opt43"> مُضعَّف</label></div>
+      <div id="noVowelControls">
+        <p>
+          <select id="NVType">
+            <option value="">SeletNVType</option>
+            <option value="opt1">مهموز</option>
+            <option value="opt2">مُضعَّف</option>
+            <option value="opt3">سالم</option>
+          </select>
+        </p>
+        <div id="hamzaSubOptions" style="display:none;">
+          <div><label><input type="radio" name="hamzaSub" value="" checked> الكل</label></div>
+          <div><label><input type="radio" name="hamzaSub" value="sub1"> خيار 1</label></div>
+          <div><label><input type="radio" name="hamzaSub" value="sub2"> خيار 2</label></div>
+          <div><label><input type="radio" name="hamzaSub" value="sub3"> خيار 3</label></div>
+          <div><label><input type="radio" name="hamzaSub" value="sub4"> خيار 4</label></div>
+          <div><label><input type="radio" name="hamzaSub" value="sub5"> خيار 5</label></div>
+        </div>
       </div>
     `;
-    // Show all options when toggle is off (no vowel filter)
-    ['wrapOpt40', 'wrapOpt41', 'wrapOpt42', 'wrapOpt43'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = '';
-    });
+
+    const nvSelect = document.getElementById('NVType');
+    const subOptions = document.getElementById('hamzaSubOptions');
+
+    if (nvSelect) {
+      nvSelect.removeEventListener('change', handleNVTypeChange);
+      nvSelect.addEventListener('change', handleNVTypeChange);
+      // Initial visibility
+      if (nvSelect.value === 'opt1') {
+        subOptions.style.display = '';
+      } else {
+        subOptions.style.display = 'none';
+      }
+    }
+
+    if (subOptions) {
+      subOptions.removeEventListener('change', handleSubChange);
+      subOptions.addEventListener('change', handleSubChange);
+    }
+
+    function handleNVTypeChange() {
+      if (this.value === 'opt1') {
+        subOptions.style.display = '';
+      } else {
+        subOptions.style.display = 'none';
+        const noneRadio = document.querySelector('input[name="hamzaSub"][value=""]');
+        if (noneRadio) noneRadio.checked = true;
+      }
+      applyFilters();
+    }
+
+    function handleSubChange(e) {
+      if (e.target.matches('input[name="hamzaSub"]')) {
+        applyFilters();
+      }
+    }
+
     applyFilters();
     updateControlBoxBorders();
     return;
@@ -325,19 +368,15 @@ function updateList6() {
     const group = document.getElementById('hamzahDoubleGroup');
     if (!group) return;
 
-    // Show the group only if position is valid (non‑double) and a vowel type is chosen
     if (pos && pos !== 'double' && typeVal) {
       group.style.display = '';
       const w40 = document.getElementById('wrapOpt40');
       const w41 = document.getElementById('wrapOpt41');
       const w42 = document.getElementById('wrapOpt42');
       const w43 = document.getElementById('wrapOpt43');
-      // Hide all first
       [w40, w41, w42, w43].forEach(el => { if (el) el.style.display = 'none'; });
-      // Show according to position AND (for start) vowel type
       if (pos === 'start') {
         if (w41) w41.style.display = '';
-        // ★ opt42 only for واو (o)
         if (w42) w42.style.display = (typeVal === 'o') ? '' : 'none';
         if (w43) w43.style.display = '';
       } else if (pos === 'middle') {
@@ -347,7 +386,6 @@ function updateList6() {
         if (w40) w40.style.display = '';
         if (w41) w41.style.display = '';
       }
-      // If the currently checked radio is hidden, reset to "none"
       const checkedRadio = document.querySelector('input[name="hamzahDouble"]:checked');
       if (checkedRadio) {
         const wrapper = checkedRadio.closest('div[id^="wrapOpt"]');
@@ -363,7 +401,6 @@ function updateList6() {
     }
   }
 
-  // Helper: update visibility of radio wrappers in pattern (double) group
   function updatePatternRadioVisibility() {
     const pos = vowelPosition ? vowelPosition.value : '';
     const patVal = vowelPattern ? vowelPattern.value : '';
@@ -374,13 +411,10 @@ function updateList6() {
       group.style.display = '';
       const w40p = document.getElementById('wrapOpt40p');
       const w41p = document.getElementById('wrapOpt41p');
-      // Hide both
       if (w40p) w40p.style.display = 'none';
       if (w41p) w41p.style.display = 'none';
-      // Show based on pattern
       if (patVal === 'grouped' && w40p) w40p.style.display = '';
       else if (patVal === 'seperate' && w41p) w41p.style.display = '';
-      // Reset if checked radio is hidden
       const checkedRadio = document.querySelector('input[name="hamzahDouble"]:checked');
       if (checkedRadio) {
         const wrapper = checkedRadio.closest('div[id^="wrapOpt"]');
@@ -396,23 +430,19 @@ function updateList6() {
     }
   }
 
-  // Main handler for position change
   function handlePositionChange() {
     const val = vowelPosition ? vowelPosition.value : '';
-
     if (vowelTypeContainer) {
       vowelTypeContainer.style.display = (val && val !== 'double') ? '' : 'none';
     }
     if (patternContainer) {
       patternContainer.style.display = (val === 'double') ? 'block' : 'none';
     }
-
     updateVowelRadioVisibility();
     updatePatternRadioVisibility();
     applyFilters();
   }
 
-  // Handlers for dropdown changes
   function onVowelTypeChange() {
     updateVowelRadioVisibility();
     applyFilters();
@@ -423,11 +453,10 @@ function updateList6() {
     applyFilters();
   }
 
-  // Attach events
   if (vowelPosition) {
     vowelPosition.removeEventListener('change', handlePositionChange);
     vowelPosition.addEventListener('change', handlePositionChange);
-    handlePositionChange(); // initial setup
+    handlePositionChange();
   }
   if (vowelType) {
     vowelType.removeEventListener('change', onVowelTypeChange);
@@ -438,50 +467,57 @@ function updateList6() {
     vowelPattern.addEventListener('change', onPatternChange);
   }
 
+  list6.querySelectorAll('input[name="hamzahDouble"]').forEach(radio => {
+    radio.removeEventListener('change', applyFilters);
+    radio.addEventListener('change', applyFilters);
+  });
+
   updateControlBoxBorders();
 }
 
-// Update list7 
+// ----- Update list7 -----
 function updateList7() {
   const deriv = els.deriv?.value;
   const cat = els.cat?.value;
   const list7 = document.getElementById("list7");
-
   if (!list7) return;
 
   let html = '';
-
   if (deriv === "deriv") {
     html = `
-      <p>
-        <input type="checkbox" id="plusOne">بحرف
-      </p>
-      <p>
-        <input type="checkbox" id="plusTwo">بحرفين
-      </p>
+      <p><input type="checkbox" id="plusOne">بحرف</p>
+      <p><input type="checkbox" id="plusTwo">بحرفين</p>
     `;
-
     if (cat === "tri") {
-      html += `
-        <p>
-          <input type="checkbox" id="plusThree">بثلاثة أحرف
-        </p>
-      `;
+      html += `<p><input type="checkbox" id="plusThree">بثلاثة أحرف</p>`;
     }
   }
-
   list7.innerHTML = html;
 
   const plusOne = document.getElementById('plusOne');
   const plusTwo = document.getElementById('plusTwo');
   const plusThree = document.getElementById('plusThree');
 
-  if (plusOne) plusOne.addEventListener('change', () => { updateList8(); applyFilters(); });
-  if (plusTwo) plusTwo.addEventListener('change', () => { updateList8(); applyFilters(); });
-  if (plusThree) plusThree.addEventListener('change', () => { updateList8(); applyFilters(); });
+  if (plusOne) {
+    plusOne.removeEventListener('change', handlePlusChange);
+    plusOne.addEventListener('change', handlePlusChange);
+  }
+  if (plusTwo) {
+    plusTwo.removeEventListener('change', handlePlusChange);
+    plusTwo.addEventListener('change', handlePlusChange);
+  }
+  if (plusThree) {
+    plusThree.removeEventListener('change', handlePlusChange);
+    plusThree.addEventListener('change', handlePlusChange);
+  }
+
+  function handlePlusChange() {
+    updateList8();
+    applyFilters();
+  }
 }
 
-// Attach letter listeners
+// ----- Attach letter listeners -----
 function attachLetterListeners() {
   const letterSelects = ['letter1', 'letter2', 'letter3'];
   letterSelects.forEach(selectId => {
@@ -493,7 +529,7 @@ function attachLetterListeners() {
   });
 }
 
-//Hides the boxes if empty
+// ----- Hide empty boxes -----
 function updateControlBoxBorders() {
   ['list5', 'list6', 'list7', 'list8'].forEach(id => {
     const el = document.getElementById(id);
@@ -504,6 +540,7 @@ function updateControlBoxBorders() {
   });
 }
 
+// ----- Columns definition -----
 function columns() {
   return [
     { label: 'الفعل', width: 'var(--w-verb)', cls: 'col-verb', sticky: true, sortable: true,
@@ -527,16 +564,7 @@ function columns() {
   ];
 }
 
-function getCheckedState(id) {
-  const elements = document.querySelectorAll(`#${id}`);
-  for (const el of elements) {
-    if (el.offsetParent !== null) { // visible
-      return el.checked;
-    }
-  }
-  return false; // fallback
-}
-
+// ----- Main filter function -----
 function applyFilters() {
   SVGFilters();
 
@@ -545,21 +573,27 @@ function applyFilters() {
   const deriv = els.deriv.value;
   const trans = els.trans.value;
 
-  // Read selected radio value
+  const vowelToggle = document.getElementById('vowelToggle');
+  const showVowelOnly = vowelToggle ? vowelToggle.checked : false;
+
   const hamzahRadio = document.querySelector('input[name="hamzahDouble"]:checked');
   const hamzahVal = hamzahRadio ? hamzahRadio.value : '';
 
-  // Pattern checkboxes (unchanged)
+  let nvTypeVal = '';
+  let hamzaSubVal = '';
+  if (!showVowelOnly) {
+    const nvSelect = document.getElementById('NVType');
+    nvTypeVal = nvSelect ? nvSelect.value : '';
+    const subRadio = document.querySelector('input[name="hamzaSub"]:checked');
+    hamzaSubVal = subRadio ? subRadio.value : '';
+  }
+
   const selectedPatterns = Array.from(document.querySelectorAll('#list8 input[type="checkbox"]:checked'))
                                  .map(cb => cb.value);
 
-  // Letter filters
   const letter1 = document.getElementById('letter1')?.value || '';
   const letter2 = document.getElementById('letter2')?.value || '';
   const letter3 = document.getElementById('letter3')?.value || '';
-
-  const vowelToggle = document.getElementById('vowelToggle');
-  const showVowelOnly = vowelToggle ? vowelToggle.checked : false;
 
   const doubleToggle = document.getElementById('doubleToggle');
   const doubleChecked = doubleToggle ? doubleToggle.checked : false;
@@ -594,7 +628,7 @@ function applyFilters() {
       }
     }
 
-    // Vowel filters (unchanged)
+    // Vowel filters (toggle ON)
     if (cat === 'tri' && showVowelOnly) {
       const isVowel = (ch) => /[وي]/.test(ch);
       const matchesType = (ch) => {
@@ -603,13 +637,11 @@ function applyFilters() {
         if (vowelType === 'i') return ch === 'ي';
         return false;
       };
-
       function isOnlyVowelAt(pos) {
         const vowelPositions = [0, 1, 2].filter(i => isVowel(root[i]));
         if (vowelPositions.length !== 1) return false;
         return vowelPositions[0] === pos && matchesType(root[pos]);
       }
-
       if (vowelPosition === 'start') {
         if (!isOnlyVowelAt(0)) return false;
       } else if (vowelPosition === 'middle') {
@@ -630,12 +662,35 @@ function applyFilters() {
       }
     }
 
-    // ----- Hamzah / doubled filter (radio) -----
-    if (hamzahVal === 'opt40' && root[0] !== 'أ') return false;
-    if (hamzahVal === 'opt41' && root[1] !== 'أ') return false;
-    if (hamzahVal === 'opt42' && root[2] !== 'أ') return false;
-    if (hamzahVal === 'opt43' && root[1] !== root[2]) return false;
-    // if hamzahVal is '' (none) -> no filter
+    // Hamzah/doubled (toggle ON)
+    if (showVowelOnly) {
+      if (hamzahVal === 'opt40' && root[0] !== 'أ') return false;
+      if (hamzahVal === 'opt41' && root[1] !== 'أ') return false;
+      if (hamzahVal === 'opt42' && root[2] !== 'أ') return false;
+      if (hamzahVal === 'opt43' && root[1] !== root[2]) return false;
+    }
+
+    // No‑vowel filters (toggle OFF)
+    if (cat === 'tri' && !showVowelOnly && rootLength === 3) {
+      const r0 = root[0], r1 = root[1], r2 = root[2];
+      if (nvTypeVal === 'opt1') {
+        if (!root.includes('أ')) return false;
+      } else if (nvTypeVal === 'opt2') {
+        if (r1 !== r2) return false;
+      } else if (nvTypeVal === 'opt3') {
+        if (root.includes('أ') || r1 === r2) return false;
+      }
+
+      if (nvTypeVal === 'opt1' && hamzaSubVal) {
+        switch (hamzaSubVal) {
+          case 'sub1': if (!(r0 === 'أ' && r2 === 'أ')) return false; break;
+          case 'sub2': if (!(r0 === 'أ' && r1 !== 'أ' && r2 !== 'أ')) return false; break;
+          case 'sub3': if (!(r0 === 'أ' && r1 === r2)) return false; break;
+          case 'sub4': if (!(r1 === 'أ')) return false; break;
+          case 'sub5': if (!(r2 === 'أ')) return false; break;
+        }
+      }
+    }
 
     return true;
   });
@@ -649,11 +704,11 @@ function applyFilters() {
   els.counter.textContent = `عرض ${arNum(filtered.length)} من ${arNum(ALL.length)}`;
 }
 
+// ----- Reset filters -----
 function resetFilters() {
   els.search.value = '';
   [els.cat, els.deriv, els.trans].forEach((s) => (s.value = ''));
 
-  // Reset plus checkboxes
   const plusOne = document.getElementById('plusOne');
   const plusTwo = document.getElementById('plusTwo');
   const plusThree = document.getElementById('plusThree');
@@ -661,30 +716,32 @@ function resetFilters() {
   if (plusTwo) plusTwo.checked = false;
   if (plusThree) plusThree.checked = false;
 
-  // Reset letter selects
   const letterSelects = ['letter1', 'letter2', 'letter3', 'letter4'];
-  letterSelects.forEach(selectId => {
-    const select = document.getElementById(selectId);
+  letterSelects.forEach(id => {
+    const select = document.getElementById(id);
     if (select) select.value = '';
   });
 
-  // Reset vowel and double toggles
   const vowelToggle = document.getElementById('vowelToggle');
   if (vowelToggle) vowelToggle.checked = false;
   const doubleToggle = document.getElementById('doubleToggle');
   if (doubleToggle) doubleToggle.checked = false;
 
+  const nvSelect = document.getElementById('NVType');
+  if (nvSelect) nvSelect.value = '';
+  const subOptions = document.getElementById('hamzaSubOptions');
+  if (subOptions) subOptions.style.display = 'none';
+  const noneSub = document.querySelector('input[name="hamzaSub"][value=""]');
+  if (noneSub) noneSub.checked = true;
+
   const defaultRadio = document.querySelector('input[name="hamzahDouble"][value=""]');
   if (defaultRadio) defaultRadio.checked = true;
 
-  // Clear list6
   const list6 = document.getElementById('list6');
   if (list6) list6.innerHTML = '';
 
-  // Rebuild pattern checkboxes
   updateList8();
 
-  // Uncheck any pattern checkboxes
   const list8 = document.getElementById('list8');
   if (list8) {
     list8.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
@@ -697,6 +754,7 @@ function resetFilters() {
   applyFilters();
 }
 
+// ----- Stats -----
 function renderStats(rows) {
   let l = 0, m = 0, k = 0;
   for (const r of rows) {
@@ -727,30 +785,26 @@ function debounce(fn, ms) {
   };
 }
 
-// Download modal functionality
+// ----- Download modal -----
 const modal = document.getElementById('downloadModal');
 const downloadBtn = document.getElementById('download');
-
 if (downloadBtn) {
   downloadBtn.addEventListener('click', function(e) {
     e.preventDefault();
     if (modal) modal.style.display = 'flex';
   });
 }
-
 const closeModal = document.querySelector('.close-modal');
 if (closeModal) {
   closeModal.addEventListener('click', function() {
     if (modal) modal.style.display = 'none';
   });
 }
-
 window.addEventListener('click', function(e) {
   if (modal && e.target === modal) {
     modal.style.display = 'none';
   }
 });
-
 document.querySelectorAll('.modal-option').forEach(button => {
   button.addEventListener('click', function() {
     const format = this.getAttribute('data-format');
@@ -763,16 +817,7 @@ document.querySelectorAll('.modal-option').forEach(button => {
   });
 });
 
-
-
-
-
-
-
-
-
-
-// SVG functions
+// ----- SVG functions -----
 async function loadCircle1SVG() {
   try {
     const response = await fetch('Circle 1.svg');
@@ -780,7 +825,6 @@ async function loadCircle1SVG() {
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
     const svg = svgDoc.documentElement;
-
     const imageContainer = document.querySelector('.image-container');
     if (imageContainer) {
       const imgTag = imageContainer.querySelector('img[src="Circle 1.svg"]');
@@ -794,7 +838,6 @@ async function loadCircle1SVG() {
         imageContainer.appendChild(svg);
       }
     }
-    console.log('Circle 1.svg loaded and injected successfully');
     return svg;
   } catch (error) {
     console.error('Error loading Circle 1.svg:', error);
@@ -809,7 +852,6 @@ async function loadCircle2SVG() {
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
     const svg = svgDoc.documentElement;
-
     const imageContainer = document.querySelector('.image-container');
     if (imageContainer) {
       const imgTag = imageContainer.querySelector('img[src="Circle 2.svg"]');
@@ -823,7 +865,6 @@ async function loadCircle2SVG() {
         imageContainer.appendChild(svg);
       }
     }
-    console.log('Circle 2.svg loaded and injected successfully');
     return svg;
   } catch (error) {
     console.error('Error loading Circle 2.svg:', error);
@@ -832,51 +873,45 @@ async function loadCircle2SVG() {
 }
 
 function setOpacityByID(svg, id) {
-  if (!svg) {
-    console.warn('SVG element not provided.');
-    return;
-  }
-
+  if (!svg) return;
   const element = svg.getElementById(id);
   if (!element) {
     console.warn(`No element found with id="${id}"`);
     return;
   }
-
   element.style.opacity = 1;
 }
 
 function resetGroupOpacity(svg, groupId) {
-  if (!svg) {
-    console.warn('SVG element not provided.');
-    return;
-  }
-
+  if (!svg) return;
   const group = svg.getElementById(groupId);
-  if (!group) {
-    console.warn(`Group with id="${groupId}" not found.`);
-    return;
-  }
-
+  if (!group) return;
   const children = group.children;
-  if (children.length === 0) {
-    console.warn(`Group "${groupId}" has no children.`);
-    return;
-  }
-
   for (let i = 0; i < children.length; i++) {
     children[i].style.opacity = 0;
   }
 }
 
+// ----- SVG filter (uses the same values as applyFilters) -----
 function SVGFilters() {
   resetGroupOpacity(circle2, "Highlight");
+
+  const cat = els.cat.value;
+  const vowelToggle = document.getElementById('vowelToggle');
+  const showVowelOnly = vowelToggle ? vowelToggle.checked : false;
 
   const hamzahRadio = document.querySelector('input[name="hamzahDouble"]:checked');
   const hamzahVal = hamzahRadio ? hamzahRadio.value : '';
 
-  const cat = els.cat.value;
-  const showVowelOnly = document.getElementById('vowelToggle')?.checked || false;
+  let nvTypeVal = '';
+  let hamzaSubVal = '';
+  if (!showVowelOnly) {
+    const nvSelect = document.getElementById('NVType');
+    nvTypeVal = nvSelect ? nvSelect.value : '';
+    const subRadio = document.querySelector('input[name="hamzaSub"]:checked');
+    hamzaSubVal = subRadio ? subRadio.value : '';
+  }
+
   const vowelPosition = document.getElementById('vowelPositionSelect')?.value || '';
   const vowelType = document.getElementById('vowelTypeSelect')?.value || '';
   const vowelPattern = document.getElementById('vowelPatternSelect')?.value || '';
@@ -884,7 +919,6 @@ function SVGFilters() {
   if (cat === "tri") {
     if (showVowelOnly) {
       setOpacityByID(circle2, "Vowel");
-
       if (vowelPosition === 'start') {
         setOpacityByID(circle2, "V1");
         if (vowelType === 'o') {
@@ -930,16 +964,25 @@ function SVGFilters() {
         }
       }
     } else {
-      // No-vowel branch
       setOpacityByID(circle2, "No-vowel");
-      if (!hamzahVal) {
-        setOpacityByID(circle2, "NV3");
-      } else {
-        if (hamzahVal === 'opt40') setOpacityByID(circle2, "NV2");
-        else if (hamzahVal === 'opt41') setOpacityByID(circle2, "NV2-2");
-        else if (hamzahVal === 'opt42') setOpacityByID(circle2, "NV2-1");
-        else if (hamzahVal === 'opt43') setOpacityByID(circle2, "NV1");
-        // Additional sub‑paths can be added if needed, but with single selection we stop here.
+      if (nvTypeVal !== '') {
+        if (nvTypeVal === 'opt1'){
+          setOpacityByID(circle2, "NV2");
+          if (hamzaSubVal === 'sub1') {
+            setOpacityByID(circle2, "NV2-4")
+          } else if (hamzaSubVal === 'sub2') {
+            setOpacityByID(circle2, "NV2-3")
+          } else if (hamzaSubVal === 'sub3') {
+            setOpacityByID(circle2, "NV2-3")
+            setOpacityByID(circle2, "NV2-3-1")
+          } else if (hamzaSubVal === 'sub4') {
+            setOpacityByID(circle2, "NV2-2")
+          } else if (hamzaSubVal === 'sub5') {
+            setOpacityByID(circle2, "NV2-1")
+          } 
+        }
+        else if (nvTypeVal === 'opt2') setOpacityByID(circle2, "NV1");
+        else if (nvTypeVal === 'opt3') setOpacityByID(circle2, "NV3");
       }
     }
   }
