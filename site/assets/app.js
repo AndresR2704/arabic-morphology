@@ -262,7 +262,7 @@ function updateList6() {
           <div><label><input type="radio" name="hamzaSub" value="" checked> الكل</label></div>
           <div><label><input type="radio" name="hamzaSub" value="sub1">مهموز الفاء واللام</label></div>
           <div><label><input type="radio" name="hamzaSub" value="sub2">مهموز الفاء</label></div>
-          <div><label><input type="radio" name="hamzaSub" value="sub3">مهموز الفاء مُضعف</label></div>
+          <div><label><input type="radio" name="hamzaSub" value="sub3">مهموز الفاء مُضعَّف</label></div>
           <div><label><input type="radio" name="hamzaSub" value="sub4">مهموز العين</label></div>
           <div><label><input type="radio" name="hamzaSub" value="sub5">مهموز اللام</label></div>
         </div>
