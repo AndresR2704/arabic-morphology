@@ -144,9 +144,7 @@ function updateList8() {
   const plusTwo = document.getElementById('plusTwo')?.checked || false;
   const plusThree = document.getElementById('plusThree')?.checked || false;
 
-  let index = 0; // counter for unique IDs
-
-  function addCheckbox(value) {
+  function addCheckbox(value, index) {
     const label = document.createElement('label');
     const cb = document.createElement('input');
     cb.type = 'checkbox';
@@ -157,39 +155,36 @@ function updateList8() {
     label.appendChild(document.createTextNode(' ' + value));
     container.appendChild(label);
     container.appendChild(document.createElement('br'));
-    index++;
   }
 
   let hasOptions = false;
 
   if (cat === 'tri') {
     if (deriv === 'basic') {
-      for (let i = 0; i <= 5; i++) addCheckbox(list8Options[i]);
+      for (let i = 0; i <= 5; i++) addCheckbox(list8Options[i], i);
       hasOptions = true;
     }
     if (plusOne) {
-      for (let i = 7; i <= 9; i++) addCheckbox(list8Options[i]);
+      for (let i = 7; i <= 9; i++) addCheckbox(list8Options[i], i);
       hasOptions = true;
     }
     if (plusTwo) {
-      for (let i = 10; i <= 14; i++) addCheckbox(list8Options[i]);
+      for (let i = 10; i <= 14; i++) addCheckbox(list8Options[i], i);
       hasOptions = true;
     }
     if (plusThree) {
-      for (let i = 15; i <= 18; i++) addCheckbox(list8Options[i]);
+      for (let i = 15; i <= 18; i++) addCheckbox(list8Options[i], i);
       hasOptions = true;
     }
   } else if (cat === 'quadri') {
     if (deriv === 'basic') {
-      addCheckbox(list8Options[6]);
       hasOptions = true;
     }
     if (plusOne) {
-      addCheckbox(list8Options[19]);
       hasOptions = true;
     }
     if (plusTwo) {
-      for (let i = 20; i <= 21; i++) addCheckbox(list8Options[i]);
+      for (let i = 20; i <= 21; i++) addCheckbox(list8Options[i], i);
       hasOptions = true;
     }
   }
@@ -923,6 +918,9 @@ function SVGFilters() {
   const deriv = els.deriv.value;
   const vowelToggle = document.getElementById('vowelToggle');
   const showVowelOnly = vowelToggle ? vowelToggle.checked : false;
+  const plusOne = document.getElementById('plusOne')?.checked || false;
+  const plusTwo = document.getElementById('plusTwo')?.checked || false;
+  const plusThree = document.getElementById('plusThree')?.checked || false;
 
   const hamzahRadio = document.querySelector('input[name="hamzahDouble"]:checked');
   const hamzahVal = hamzahRadio ? hamzahRadio.value : '';
@@ -1031,6 +1029,46 @@ function SVGFilters() {
     if (cat === "quadri"){
       setOpacityByID(circle1, "NA-2");
       setOpacityByID(circle1, "NA-2-1");
+    }
+  } else if (deriv === "deriv"){
+    setOpacityByID(circle1, "Add");
+
+    if (cat === "tri"){
+      setOpacityByID(circle1, "AT");
+
+      if (plusOne){
+        setOpacityByID(circle1, "AT+1");
+        if (patternStates['pat7']){setOpacityByID(circle1, "AT+1-1")};
+        if (patternStates['pat8']){setOpacityByID(circle1, "AT+1-2")};
+        if (patternStates['pat9']){setOpacityByID(circle1, "AT+1-3")};
+      }
+      if (plusTwo){
+        setOpacityByID(circle1, "AT+2");
+        if (patternStates['pat10']){setOpacityByID(circle1, "AT+2-1")};
+        if (patternStates['pat11']){setOpacityByID(circle1, "AT+2-2")};
+        if (patternStates['pat12']){setOpacityByID(circle1, "AT+2-3")};
+        if (patternStates['pat13']){setOpacityByID(circle1, "AT+2-4")};
+        if (patternStates['pat14']){setOpacityByID(circle1, "AT+2-5")};
+      }
+      if (plusThree){
+        setOpacityByID(circle1, "AT+3");
+        if (patternStates['pat15']){setOpacityByID(circle1, "AT+3-1")};
+        if (patternStates['pat16']){setOpacityByID(circle1, "AT+3-2")};
+        if (patternStates['pat17']){setOpacityByID(circle1, "AT+3-3")};
+        if (patternStates['pat18']){setOpacityByID(circle1, "AT+3-4")};
+      }
+    }
+    if (cat === "quadri"){
+      setOpacityByID(circle1, "AQ");
+      if (plusOne){
+        setOpacityByID(circle1, "AQ+1");
+        setOpacityByID(circle1, "AQ+1-1")
+      }
+      if (plusTwo){
+        setOpacityByID(circle1, "AQ+2");
+        if (patternStates['pat20']){setOpacityByID(circle1, "AQ+2-1")};
+        if (patternStates['pat21']){setOpacityByID(circle1, "AQ+2-2")};
+      }
     }
   }
 }
