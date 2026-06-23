@@ -27,6 +27,8 @@ const els = {
   vowelPosition: document.getElementById('Vposition'),
 };
 
+const derivContainer = document.getElementById('derivContainer') || els.deriv?.parentElement;
+
 let ALL = [];
 let table = null;
 let COLS = [];
@@ -63,7 +65,19 @@ async function init() {
   const onChange = debounce(applyFilters, 120);
   els.search.addEventListener('input', onChange);
 
+  // Show/hide deriv dropdown based on category selection
+  function toggleDerivVisibility() {
+    const cat = els.cat.value;
+    if (derivContainer) {
+      derivContainer.style.display = cat ? '' : 'none';
+    } else {
+      // Fallback: hide the select itself (label will remain)
+      els.deriv.style.display = cat ? '' : 'none';
+    }
+  }
+
   els.cat.addEventListener('change', () => {
+    toggleDerivVisibility();
     updateList5();  
     updateList7();
     updateList8();
@@ -87,6 +101,9 @@ async function init() {
   if (els.vowelPosition) {
     els.vowelPosition.addEventListener('change', updateSVGLineColors);
   }
+
+  // Initial visibility
+  toggleDerivVisibility();
 
   // Initial build
   updateList5();
@@ -127,15 +144,20 @@ function updateList8() {
   const plusTwo = document.getElementById('plusTwo')?.checked || false;
   const plusThree = document.getElementById('plusThree')?.checked || false;
 
+  let index = 0; // counter for unique IDs
+
   function addCheckbox(value) {
     const label = document.createElement('label');
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.value = value;
+    cb.id = `pat${index}`;
+    cb.checked = true;          // default checked
     label.appendChild(cb);
     label.appendChild(document.createTextNode(' ' + value));
     container.appendChild(label);
     container.appendChild(document.createElement('br'));
+    index++;
   }
 
   let hasOptions = false;
@@ -172,6 +194,7 @@ function updateList8() {
     }
   }
 
+  // Attach event listeners
   container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
     cb.removeEventListener('change', applyFilters);
     cb.addEventListener('change', applyFilters);
@@ -205,7 +228,6 @@ function updateList5() {
     // Attach listener to vowel toggle
     const vowelToggle = document.getElementById('vowelToggle');
     if (vowelToggle) {
-      // Remove any existing listener to avoid duplicates
       vowelToggle.removeEventListener('change', updateList6);
       vowelToggle.addEventListener('change', updateList6);
     }
@@ -485,11 +507,11 @@ function updateList7() {
   let html = '';
   if (deriv === "deriv") {
     html = `
-      <p><input type="checkbox" id="plusOne">بحرف</p>
-      <p><input type="checkbox" id="plusTwo">بحرفين</p>
+      <p><input type="checkbox" id="plusOne" checked>بحرف</p>
+      <p><input type="checkbox" id="plusTwo" checked>بحرفين</p>
     `;
     if (cat === "tri") {
-      html += `<p><input type="checkbox" id="plusThree">بثلاثة أحرف</p>`;
+      html += `<p><input type="checkbox" id="plusThree" checked>بثلاثة أحرف</p>`;
     }
   }
   list7.innerHTML = html;
@@ -894,9 +916,11 @@ function resetGroupOpacity(svg, groupId) {
 
 // ----- SVG filter (uses the same values as applyFilters) -----
 function SVGFilters() {
+  resetGroupOpacity(circle1, "Highlight");
   resetGroupOpacity(circle2, "Highlight");
 
   const cat = els.cat.value;
+  const deriv = els.deriv.value;
   const vowelToggle = document.getElementById('vowelToggle');
   const showVowelOnly = vowelToggle ? vowelToggle.checked : false;
 
@@ -915,6 +939,11 @@ function SVGFilters() {
   const vowelPosition = document.getElementById('vowelPositionSelect')?.value || '';
   const vowelType = document.getElementById('vowelTypeSelect')?.value || '';
   const vowelPattern = document.getElementById('vowelPatternSelect')?.value || '';
+  const patternStates = {};
+
+  document.querySelectorAll('#list8 input[type="checkbox"]').forEach(cb => {
+    patternStates[cb.id] = cb.checked;
+  });
 
   if (cat === "tri") {
     if (showVowelOnly) {
@@ -984,6 +1013,24 @@ function SVGFilters() {
         else if (nvTypeVal === 'opt2') setOpacityByID(circle2, "NV1");
         else if (nvTypeVal === 'opt3') setOpacityByID(circle2, "NV3");
       }
+    }
+  }
+
+  if (deriv === "basic") {
+    setOpacityByID(circle1, "NoAdd");
+    if (cat === "tri"){
+      setOpacityByID(circle1, "NA-1");
+
+      if (patternStates['pat0']){setOpacityByID(circle1, "NA-1-1")};
+      if (patternStates['pat1']){setOpacityByID(circle1, "NA-1-2")};
+      if (patternStates['pat2']){setOpacityByID(circle1, "NA-1-3")};
+      if (patternStates['pat3']){setOpacityByID(circle1, "NA-1-4")};
+      if (patternStates['pat4']){setOpacityByID(circle1, "NA-1-5")};
+      if (patternStates['pat5']){setOpacityByID(circle1, "NA-1-6")};
+    }
+    if (cat === "quadri"){
+      setOpacityByID(circle1, "NA-2");
+      setOpacityByID(circle1, "NA-2-1");
     }
   }
 }
