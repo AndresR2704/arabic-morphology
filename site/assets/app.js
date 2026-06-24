@@ -1016,8 +1016,10 @@ function SVGFilters() {
 
   if (deriv === "basic") {
     setOpacityByID(circle1, "NoAdd");
+    setOpacityByID(circle1, "NAtext0");
     if (cat === "tri"){
       setOpacityByID(circle1, "NA-1");
+      setOpacityByID(circle1, "NAtext1");
 
       if (patternStates['pat0']){setOpacityByID(circle1, "NA-1-1")};
       if (patternStates['pat1']){setOpacityByID(circle1, "NA-1-2")};
@@ -1028,13 +1030,16 @@ function SVGFilters() {
     }
     if (cat === "quadri"){
       setOpacityByID(circle1, "NA-2");
+      setOpacityByID(circle1, "NAtext2");
       setOpacityByID(circle1, "NA-2-1");
     }
   } else if (deriv === "deriv"){
     setOpacityByID(circle1, "Add");
+    setOpacityByID(circle1, "Atext0");
 
     if (cat === "tri"){
       setOpacityByID(circle1, "AT");
+      setOpacityByID(circle1,"Atext1")
 
       if (plusOne){
         setOpacityByID(circle1, "AT+1");
@@ -1060,6 +1065,7 @@ function SVGFilters() {
     }
     if (cat === "quadri"){
       setOpacityByID(circle1, "AQ");
+      setOpacityByID(circle1, "Atext2")
       if (plusOne){
         setOpacityByID(circle1, "AQ+1");
         setOpacityByID(circle1, "AQ+1-1")
