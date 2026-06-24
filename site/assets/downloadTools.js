@@ -1,19 +1,18 @@
+import { normalizeArabic } from './render.js';
+
 let originalDataset = null;
 
-// Fetch the original JSON data from root
 async function loadOriginalData() {
   if (originalDataset) return originalDataset;
-  
+
   try {
     const response = await fetch('./verbs.json');
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    
+
     const data = await response.json();
     console.log('Loaded JSON structure:', data);
-    
-    // Handle the {fields: [], rows: []} format
+
     if (data.fields && data.rows && Array.isArray(data.rows)) {
-      // Convert rows array to array of objects using fields as keys
       originalDataset = data.rows.map(row => {
         const obj = {};
         data.fields.forEach((field, index) => {
@@ -22,17 +21,15 @@ async function loadOriginalData() {
         return obj;
       });
       console.log(`Converted ${originalDataset.length} rows to objects`);
-      console.log('Sample object:', originalDataset[0]);
       return originalDataset;
     }
-    
-    // Handle if it's already an array
+
     if (Array.isArray(data)) {
       originalDataset = data;
       console.log(`Loaded ${originalDataset.length} rows directly`);
       return originalDataset;
     }
-    
+
     throw new Error('Unknown JSON format');
   } catch (error) {
     console.error('Could not load verbs.json:', error);
@@ -40,100 +37,188 @@ async function loadOriginalData() {
   }
 }
 
-// Get current filter values (only real values, skip placeholders)
 function getCurrentFilters() {
   const search = document.getElementById('search')?.value || '';
   const filterCat = document.getElementById('filterCat')?.value || '';
   const filterDeriv = document.getElementById('filterDeriv')?.value || '';
-  const filterPattern = document.getElementById('filterPattern')?.value || '';
   const filterTrans = document.getElementById('filterTrans')?.value || '';
-  
-  // Placeholder values to skip
-  const placeholderValues = ['', 'Default 1', 'Default 2', 'Default 3', 'Default 4', 
-                              'Def5', 'Def6', 'Def7', 'Def8', 'Def9', 'الكل', 'all'];
-  
-  // Map display values to actual data values
-  let mappedCat = '';
-  if (filterCat === 'ثلاثي') mappedCat = 'tri';
-  else if (filterCat === 'رباعي') mappedCat = 'quad';
-  else mappedCat = placeholderValues.includes(filterCat) ? '' : filterCat;
-  
-  let mappedDeriv = '';
-  if (filterDeriv === 'مجرّد') mappedDeriv = 'basic';
-  else if (filterDeriv === 'مزيد') mappedDeriv = 'deriv';
-  else mappedDeriv = placeholderValues.includes(filterDeriv) ? '' : filterDeriv;
-  
-  let mappedTrans = '';
-  if (filterTrans === 'لازم') mappedTrans = 'l';
-  else if (filterTrans === 'متعدٍّ') mappedTrans = 'm';
-  else if (filterTrans === 'مشترك') mappedTrans = 'k';
-  else mappedTrans = placeholderValues.includes(filterTrans) ? '' : filterTrans;
-  
+
+  // Pattern checkboxes (list8)
+  const patternCheckboxes = document.querySelectorAll('#list8 input[type="checkbox"]:checked');
+  const selectedPatterns = Array.from(patternCheckboxes).map(cb => cb.value);
+
+  // Root letters
+  const letter1 = document.getElementById('letter1')?.value || '';
+  const letter2 = document.getElementById('letter2')?.value || '';
+  const letter3 = document.getElementById('letter3')?.value || '';
+
+  const vowelToggle = document.getElementById('vowelToggle');
+  const showVowelOnly = vowelToggle ? vowelToggle.checked : false;
+
+  const hamzahRadio = document.querySelector('input[name="hamzahDouble"]:checked');
+  const hamzahVal = hamzahRadio ? hamzahRadio.value : '';
+
+  let nvTypeVal = '';
+  let hamzaSubVal = '';
+  if (!showVowelOnly) {
+    const nvSelect = document.getElementById('NVType');
+    nvTypeVal = nvSelect ? nvSelect.value : '';
+    const subRadio = document.querySelector('input[name="hamzaSub"]:checked');
+    hamzaSubVal = subRadio ? subRadio.value : '';
+  }
+
+  const vowelPosition = document.getElementById('vowelPositionSelect')?.value || '';
+  const vowelType = document.getElementById('vowelTypeSelect')?.value || '';
+  const vowelPattern = document.getElementById('vowelPatternSelect')?.value || '';
+
+  const doubleToggle = document.getElementById('doubleToggle');
+  const doubleChecked = doubleToggle ? doubleToggle.checked : false;
+
+  const catMap = { 'ثلاثي': 'tri', 'رباعي': 'quad' };
+  const derivMap = { 'مجرّد': 'basic', 'مزيد': 'deriv' };
+  const transMap = { 'لازم': 'l', 'متعدٍّ': 'm', 'مشترك': 'k' };
+
   return {
     search: search.trim(),
-    cat: mappedCat,
-    deriv: mappedDeriv,
-    pattern: placeholderValues.includes(filterPattern) ? '' : filterPattern,
-    trans: mappedTrans
+    cat: catMap[filterCat] || filterCat,
+    deriv: derivMap[filterDeriv] || filterDeriv,
+    trans: transMap[filterTrans] || filterTrans,
+    selectedPatterns,
+    letter1, letter2, letter3,
+    showVowelOnly,
+    hamzahVal,
+    nvTypeVal,
+    hamzaSubVal,
+    vowelPosition,
+    vowelType,
+    vowelPattern,
+    doubleChecked,
   };
 }
 
-// Apply filters to the dataset
 function applyFilters(data, filters) {
   if (!data || !Array.isArray(data)) return [];
-  
-  // If no active filters, return all data
-  const hasActiveFilters = filters.search || filters.cat || filters.deriv || filters.pattern || filters.trans;
-  if (!hasActiveFilters) return data;
-  
-  return data.filter(item => {
-    // Search filter (search in verb and root)
-    if (filters.search && filters.search !== '') {
-      const searchLower = filters.search.toLowerCase();
-      const verb = (item.verb || '').toLowerCase();
-      const root = (item.root || '').toLowerCase();
-      if (!verb.includes(searchLower) && !root.includes(searchLower)) return false;
+
+  const {
+    search, cat, deriv, trans,
+    selectedPatterns,
+    letter1, letter2, letter3,
+    showVowelOnly,
+    hamzahVal,
+    nvTypeVal,
+    hamzaSubVal,
+    vowelPosition,
+    vowelType,
+    vowelPattern,
+    doubleChecked,
+  } = filters;
+
+  return data.filter(r => {
+    if (cat && r.cat !== cat) return false;
+    if (deriv && r.deriv !== deriv) return false;
+    if (trans && r.trans !== trans) return false;
+
+    if (search) {
+      const verbNorm = normalizeArabic(r.verb || '');
+      const rootNorm = normalizeArabic(r.root || '');
+      if (!verbNorm.includes(search) && !rootNorm.includes(search)) return false;
     }
-    
-    // Category filter (cat field: 'tri' or 'quad')
-    if (filters.cat && filters.cat !== '') {
-      if (item.cat !== filters.cat) return false;
+
+    // ----- Pattern checkboxes -----
+    if (selectedPatterns.length > 0 && !selectedPatterns.includes(String(r.pattern))) return false;
+
+    const root = r.root || '';
+    const rootLength = root.length;
+
+    if (cat === 'tri' && rootLength === 3) {
+      if (letter1 && root[0] !== letter1) return false;
+      if (letter2 && root[1] !== letter2) return false;
+      if (letter3 && root[2] !== letter3) return false;
     }
-    
-    // Derivation filter (deriv field: 'basic' or 'deriv')
-    if (filters.deriv && filters.deriv !== '') {
-      if (item.deriv !== filters.deriv) return false;
+    if (cat === 'quadri' && rootLength === 4) {
+      if (letter1 && root[0] !== letter1) return false;
+      if (letter3 && root[3] !== letter3) return false;
+      if (doubleChecked) {
+        const firstHalf = root.substring(0, 2);
+        const secondHalf = root.substring(2, 4);
+        if (firstHalf !== secondHalf) return false;
+      }
     }
-    
-    // Pattern filter (pattern field)
-    if (filters.pattern && filters.pattern !== '') {
-      if (item.pattern !== filters.pattern) return false;
+
+    // ----- Vowel filters (toggle ON) -----
+    if (cat === 'tri' && showVowelOnly && rootLength === 3) {
+      const isVowel = ch => /[وي]/.test(ch);
+      const matchesType = ch => {
+        if (!vowelType) return isVowel(ch);
+        if (vowelType === 'o') return ch === 'و';
+        if (vowelType === 'i') return ch === 'ي';
+        return false;
+      };
+      function isOnlyVowelAt(pos) {
+        const vowelPositions = [0,1,2].filter(i => isVowel(root[i]));
+        if (vowelPositions.length !== 1) return false;
+        return vowelPositions[0] === pos && matchesType(root[pos]);
+      }
+
+      if (vowelPosition === 'start') {
+        if (!isOnlyVowelAt(0)) return false;
+      } else if (vowelPosition === 'middle') {
+        if (!isOnlyVowelAt(1)) return false;
+      } else if (vowelPosition === 'end') {
+        if (!isOnlyVowelAt(2)) return false;
+      } else if (vowelPosition === 'double') {
+        const vowelCount = [root[0], root[1], root[2]].filter(isVowel).length;
+        if (vowelCount < 2) return false;
+        const middleIsVowel = isVowel(root[1]);
+        if (vowelPattern === 'grouped' && !middleIsVowel) return false;
+        if (vowelPattern === 'seperate' && middleIsVowel) return false;
+      } else {
+        if (!/[وي]/.test(root)) return false;
+      }
+
+      // Hamzah/doubled sub‑filters (within vowel‑on)
+      if (hamzahVal === 'opt40' && root[0] !== 'أ') return false;
+      if (hamzahVal === 'opt41' && root[1] !== 'أ') return false;
+      if (hamzahVal === 'opt42' && root[2] !== 'أ') return false;
+      if (hamzahVal === 'opt43' && root[1] !== root[2]) return false;
     }
-    
-    // Transitivity filter (trans field: 'l', 'm', 'k')
-    if (filters.trans && filters.trans !== '') {
-      if (item.trans !== filters.trans) return false;
+
+    // ----- No‑vowel filters (toggle OFF) -----
+    if (cat === 'tri' && !showVowelOnly && rootLength === 3) {
+      const [r0, r1, r2] = root;
+      if (nvTypeVal === 'opt1') {
+        if (!root.includes('أ')) return false;
+        if (hamzaSubVal) {
+          switch (hamzaSubVal) {
+            case 'sub1': if (!(r0 === 'أ' && r2 === 'أ')) return false; break;
+            case 'sub2': if (!(r0 === 'أ' && r1 !== 'أ' && r2 !== 'أ')) return false; break;
+            case 'sub3': if (!(r0 === 'أ' && r1 === r2)) return false; break;
+            case 'sub4': if (!(r1 === 'أ')) return false; break;
+            case 'sub5': if (!(r2 === 'أ')) return false; break;
+          }
+        }
+      } else if (nvTypeVal === 'opt2') {
+        if (r1 !== r2) return false;
+      } else if (nvTypeVal === 'opt3') { 
+        if (root.includes('أ') || r1 === r2) return false;
+      }
     }
-    
+
     return true;
   });
 }
 
-// Convert data to CSV using original format
 function convertToCSV(data) {
   if (!data || data.length === 0) return '';
-  
-  // Get all field names from first object
+
   const fields = Object.keys(data[0]);
   const rows = [fields.join(',')];
-  
+
   data.forEach(item => {
     const row = fields.map(field => {
       let value = item[field];
       if (value === undefined || value === null) return '';
       value = String(value);
-      
-      // Escape quotes and commas
       if (value.includes(',') || value.includes('"') || value.includes('\n')) {
         value = `"${value.replace(/"/g, '""')}"`;
       }
@@ -141,38 +226,38 @@ function convertToCSV(data) {
     });
     rows.push(row.join(','));
   });
-  
+
   return rows.join('\n');
 }
 
-// Main download functions
 export async function downloadTableAsCSV() {
   const loadingMsg = showLoadingMessage('جاري تحميل البيانات...');
-  
+
   try {
     const allData = await loadOriginalData();
-    
     if (!allData || allData.length === 0) {
       alert('فشل تحميل البيانات');
       removeLoadingMessage(loadingMsg);
       return;
     }
-    
+
     const filters = getCurrentFilters();
     console.log('Applied filters:', filters);
-    
+
     const filteredData = applyFilters(allData, filters);
-    
     console.log(`Total: ${allData.length}, Filtered: ${filteredData.length}`);
-    
+
     if (filteredData.length === 0) {
       alert('لا توجد بيانات تطابق عوامل التصفية الحالية');
       removeLoadingMessage(loadingMsg);
       return;
     }
-    
-    const csvContent = convertToCSV(filteredData);
+
+    let csvContent = convertToCSV(filteredData);
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+
+    csvContent += "\n\n# CSV LICENSE HERE"; // Add your license
+
     downloadFile(csvContent, `arabic-verbs-${timestamp}.csv`, 'text/csv');
     alert(`تم تحميل ${filteredData.length} صف بنجاح`);
   } catch (error) {
@@ -185,39 +270,41 @@ export async function downloadTableAsCSV() {
 
 export async function downloadTableAsJSON() {
   const loadingMsg = showLoadingMessage('جاري تحميل البيانات...');
-  
+
   try {
     const allData = await loadOriginalData();
-    
     if (!allData || allData.length === 0) {
       alert('فشل تحميل البيانات');
       removeLoadingMessage(loadingMsg);
       return;
     }
-    
+
     const filters = getCurrentFilters();
     const filteredData = applyFilters(allData, filters);
-    
+
     if (filteredData.length === 0) {
       alert('لا توجد بيانات تطابق عوامل التصفية الحالية');
       removeLoadingMessage(loadingMsg);
       return;
     }
-    
+
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    const jsonContent = JSON.stringify({
+
+    const jsonData = {
       exportDate: new Date().toISOString(),
       filters: {
         search: filters.search || 'لا يوجد',
         category: filters.cat || 'الكل',
         derivation: filters.deriv || 'الكل',
-        pattern: filters.pattern || 'الكل',
-        transitivity: filters.trans || 'الكل'
+        pattern: filters.selectedPatterns.length ? filters.selectedPatterns.join(', ') : 'الكل',
+        transitivity: filters.trans || 'الكل',
       },
       totalRows: filteredData.length,
-      data: filteredData
-    }, null, 2);
-    
+      data: filteredData,
+    };
+
+    let jsonContent = "// More license messages\n" + JSON.stringify(jsonData, null, 2);
+
     downloadFile(jsonContent, `arabic-verbs-${timestamp}.json`, 'application/json');
     alert(`تم تحميل ${filteredData.length} صف بنجاح`);
   } catch (error) {
@@ -229,30 +316,29 @@ export async function downloadTableAsJSON() {
 
 export async function downloadTableAsTXT() {
   const loadingMsg = showLoadingMessage('جاري تحميل البيانات...');
-  
+
   try {
     const allData = await loadOriginalData();
-    
     if (!allData || allData.length === 0) {
       alert('فشل تحميل البيانات');
       removeLoadingMessage(loadingMsg);
       return;
     }
-    
+
     const filters = getCurrentFilters();
     const filteredData = applyFilters(allData, filters);
-    
+
     if (filteredData.length === 0) {
       alert('لا توجد بيانات تطابق عوامل التصفية الحالية');
       removeLoadingMessage(loadingMsg);
       return;
     }
-    
+
     let txtContent = `قاعدة بيانات الأفعال العربية - تصدير مفلتر\n`;
     txtContent += `تاريخ التصدير: ${new Date().toLocaleString('ar')}\n`;
     txtContent += `إجمالي الأفعال: ${filteredData.length}\n`;
     txtContent += `${'='.repeat(70)}\n\n`;
-    
+
     filteredData.forEach((item, index) => {
       txtContent += `${index + 1}. `;
       txtContent += `الفعل: ${item.verb || '-'} | `;
@@ -260,7 +346,10 @@ export async function downloadTableAsTXT() {
       txtContent += `الوزن: ${item.pattern || '-'}`;
       txtContent += '\n';
     });
-    
+
+    txtContent += `\n${'='.repeat(70)}\n`;
+    txtContent += "License message hereeee !!!!!! \n"; // Add your license
+
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     downloadFile(txtContent, `arabic-verbs-${timestamp}.txt`, 'text/plain');
     alert(`تم تحميل ${filteredData.length} صف بنجاح`);
@@ -271,7 +360,7 @@ export async function downloadTableAsTXT() {
   }
 }
 
-// Helper functions
+
 function showLoadingMessage(text) {
   const div = document.createElement('div');
   div.textContent = text;
@@ -304,11 +393,11 @@ function downloadFile(content, filename, mimeType) {
   const blob = new Blob(["\uFEFF" + content], { type: `${mimeType};charset=utf-8;` });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
-  
+
   link.setAttribute('href', url);
   link.setAttribute('download', filename);
   link.style.display = 'none';
-  
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
