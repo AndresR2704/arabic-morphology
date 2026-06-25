@@ -77,11 +77,15 @@ async function init() {
   }
 
   els.cat.addEventListener('change', () => {
+    if (!els.cat.value) {
+      resetFilters();
+    } else {
+      updateList5();  
+      updateList7();
+      updateList8();
+      applyFilters();
+    }
     toggleDerivVisibility();
-    updateList5();  
-    updateList7();
-    updateList8();
-    applyFilters();
     updateControlBoxBorders();
   });
 
@@ -210,13 +214,17 @@ function updateList5() {
 
   if (cat === 'tri') {
     list5.innerHTML = `
-      <p>الحرف الأول <select id="letter1"></select></p>
-      <p>الحرف الأوسط <select id="letter2"></select></p>
-      <p>الحرف الأخير <select id="letter3"></select></p>
-      <label class="switch">
-        <input type="checkbox" id="vowelToggle">
-        <span class="slider"></span>
-      </label>
+      <section id="list1">
+        <p>الحرف الأول <select id="letter1"></select></p>
+        <p>الحرف الأوسط <select id="letter2"></select></p>
+        <p>الحرف الأخير <select id="letter3"></select></p>
+      </section>
+      <section id="list2">
+        <label class="switch">
+          <input type="checkbox" id="vowelToggle">
+          <span class="slider"></span>
+        </label>
+      </section>
     `;
     populateLetterDropdowns();
 
