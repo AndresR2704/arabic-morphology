@@ -134,9 +134,6 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
   max-height: 25vh;
 
   padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-
   gap: 1px 1px;
 }
 
@@ -263,12 +260,32 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
 
 
 /* Table */
-.table-view {
-  width: auto;
-  height: max-content;
-  border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+.table-mount {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
-.table-viewport { height: 75vh; overflow: auto; }
+
+.table-view {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: auto;
+}
+
+.table-viewport {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: auto;
+  height: 100%;
+}
+
 .table-grid { width: 100%; min-width: var(--grid-min); }
 
 .table-row { display: grid; width: 100%; height: var(--row-h); border-bottom: 1px solid var(--border); }
