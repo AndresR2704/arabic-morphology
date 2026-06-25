@@ -158,7 +158,6 @@ function updateList8() {
     label.appendChild(cb);
     label.appendChild(document.createTextNode(' ' + value));
     container.appendChild(label);
-    container.appendChild(document.createElement('br'));
   }
 
   let hasOptions = false;
