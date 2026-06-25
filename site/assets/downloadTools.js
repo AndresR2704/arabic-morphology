@@ -256,7 +256,7 @@ export async function downloadTableAsCSV() {
     let csvContent = convertToCSV(filteredData);
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
 
-    csvContent += "\n\n# CSV LICENSE HERE"; // Add your license
+    csvContent += "\n\n# CSV LICENSE HERE"; //----------LICENSE!!!!!---------------
 
     downloadFile(csvContent, `arabic-verbs-${timestamp}.csv`, 'text/csv');
     alert(`تم تحميل ${filteredData.length} صف بنجاح`);
@@ -291,6 +291,7 @@ export async function downloadTableAsJSON() {
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
 
     const jsonData = {
+      license: "license message contents here!!", //-------------License message placement------------
       exportDate: new Date().toISOString(),
       filters: {
         search: filters.search || 'لا يوجد',
@@ -303,7 +304,7 @@ export async function downloadTableAsJSON() {
       data: filteredData,
     };
 
-    let jsonContent = "// More license messages\n" + JSON.stringify(jsonData, null, 2);
+    let jsonContent = JSON.stringify(jsonData, null, 2);
 
     downloadFile(jsonContent, `arabic-verbs-${timestamp}.json`, 'application/json');
     alert(`تم تحميل ${filteredData.length} صف بنجاح`);
@@ -334,9 +335,9 @@ export async function downloadTableAsTXT() {
       return;
     }
 
-    let txtContent = `قاعدة بيانات الأفعال العربية - تصدير مفلتر\n`;
-    txtContent += `تاريخ التصدير: ${new Date().toLocaleString('ar')}\n`;
-    txtContent += `إجمالي الأفعال: ${filteredData.length}\n`;
+    let txtContent = `Custom message slot\n`;
+    txtContent += `Date and time: ${new Date().toLocaleString('ar')}\n`;
+    txtContent += `Number of verbs: ${filteredData.length}\n`;
     txtContent += `${'='.repeat(70)}\n\n`;
 
     filteredData.forEach((item, index) => {
@@ -348,7 +349,6 @@ export async function downloadTableAsTXT() {
     });
 
     txtContent += `\n${'='.repeat(70)}\n`;
-    txtContent += "License message hereeee !!!!!! \n"; // Add your license
 
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     downloadFile(txtContent, `arabic-verbs-${timestamp}.txt`, 'text/plain');
