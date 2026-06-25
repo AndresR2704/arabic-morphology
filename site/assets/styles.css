@@ -110,7 +110,21 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
   border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--ink);
 }
 
+#list1 {
+  text-align: end;
+}
+
+#list2 {
+  text-align: center;
+}
+
+#list7 {
+  height: fit-content;
+}
+
 #list8 {
+  height: fit-content;
+  max-height: 25vh;
   column-count: 2;
   column-gap: 1.5rem;
   overflow-y: auto;
@@ -209,7 +223,7 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
 }
 
 .control-box {
-  height: fit-content;
+  height: 25vh;
   padding-left: 10px;
   padding-right: 10px;
   border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--ink);
@@ -311,6 +325,7 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
   height: 34px;
   border: #1f2328;
   border-width: 2px;
+  align-self: center;
 }
 
 /* Hide default HTML checkbox */
