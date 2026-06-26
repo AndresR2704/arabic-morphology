@@ -17,27 +17,50 @@
         <a href="https://github.com/M-Bakni/Arabic-Morphology">المستودع على GitHub</a>
       </p>
       <p class="credits">
-        إعداد المحتوى: مروان البواب، يحيى مير علم · معالجة البيانات والنشر: ميشيل بكني، وائل تلات ·
-        الرخصة: CC BY 4.0
+        إعداد المحتوى: مروان البواب، يحيى مير علم · معالجة البيانات والنشر: ميشيل بكني، وائل تلات،  أندريس رُوسو · الرخصة: CC BY 4.0
       </p>
     </div>
   </header>
 
   <main class="wrap">
     <section class="panel">
-      <div class="panel-stats" id="stats">جارٍ التحميل…</div>
+      <section class="control-panel">
+        <div class="panel-stats" id="stats">جارٍ التحميل…</div>
 
-      <div class="filters">
-        <input type="text" id="search" placeholder="ابحث في الجذر أو الفعل…" />
-        <select id="filterCat" aria-label="ثلاثي أو رباعي"><option value="">ثلاثي/رباعي</option></select>
-        <select id="filterDeriv" aria-label="مجرّد أو مزيد"><option value="">مجرّد/مزيد</option></select>
-        <select id="filterPattern" aria-label="الوزن"><option value="">الأبواب والأوزان</option></select>
-        <select id="filterTrans" aria-label="التعدية"><option value="">اللزوم والتعدية</option></select>
-        <button id="resetFilters" type="button">تصفير</button>
-        <span class="counter" id="counter"></span>
-      </div>
-
-      <div class="table-mount" id="tableMount"></div>
+        <div class="filters">
+          <input type="text" id="search" placeholder="ابحث في الجذر أو الفعل…" />
+          <select id="filterCat" aria-label="ثلاثي أو رباعي"><option value="">عدد حروف الجذر</option></select>
+          <span id="derivContainer"><select id="filterDeriv" aria-label="مجرّد أو مزيد"><option value="">التجرُّد والزيادة</option></select></span>
+          <select id="filterTrans" aria-label="التعدية"><option value="">اللزوم والتعدية</option></select>
+          <button id="resetFilters" type="button">إعادة ضبط</button>
+          <span class="counter" id="counter"></span>
+        </div>
+        <div class="dynamic-filter">
+            <div class="control-box" id="list5"></div>
+            <div class="control-box" id="list6"></div>
+            <div class="control-box" id="list7"></div>
+            <div class="control-box" id="list8"></div>
+        </div>
+        <div class="image-container">
+          <img src="Circle 2.svg" alt="wheel?" height="43vh" width="43vh"/>
+          <img src="Circle 1.svg" alt="wheel?" height="43vh" width="43vh"/>
+        </div>
+      </section>
+      <section class="data-panel">
+        <div class="table-mount" id="tableMount"></div>
+        <button class="download" id="download" type="button"><img src="DownloadIcon.svg" alt="">تحميل</button>
+          <div id="downloadModal" class="modal" style="display: none;">
+            <div class="modal-content">
+              <span class="close-modal">&times;</span>
+              <h3>اختر مصاغة التحميل:</h3>
+              <div class="modal-options">
+                <button class="modal-option" data-format="csv">CSV <span>إكسل</span></button>
+                <button class="modal-option" data-format="json">JSON <span>مصاغة تدوين الأغراض بإخطاطة جافا</span></button>
+                <button class="modal-option" data-format="txt">TXT <span>نص</span></button>
+              </div>
+            </div>
+          </div>
+      </section>
     </section>
 
     <footer class="downloads">
