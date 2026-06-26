@@ -259,10 +259,10 @@ export async function downloadTableAsCSV() {
     let csvContent = convertToCSV(filteredData);
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
 
-    csvContent += "\n\n# CSV LICENSE HERE"; //----------LICENSE!!!!!---------------
+    csvContent += "\n\n# هذه الأفعال مُنزَّلة من مبادرة مسرد الويكي https://w.wiki/DozW، ومرخَّصة برخصة المشاع الإبداعي: CC BY 4.0";
 
     downloadFile(csvContent, `arabic-verbs-${timestamp}.csv`, 'text/csv');
-     alert(`Number of verbs downloaded: ${filteredData.length}`);
+     alert(`عدد الأفعال المُنزَّلة: ${filteredData.length}`);
   } catch (error) {
     console.error('Download error:', error);
     alert('حدث خطأ: ' + error.message);
@@ -294,7 +294,7 @@ export async function downloadTableAsJSON() {
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
 
     const jsonData = {
-      license: "license message contents here!!", //-------------License message placement------------
+      license: "هذه الأفعال مُنزَّلة من مبادرة مسرد الويكي https://w.wiki/DozW، ومرخَّصة برخصة المشاع الإبداعي: CC BY 4.0",
       exportDate: new Date().toISOString(),
       filters: {
         search: filters.search || 'لا يوجد',
@@ -310,7 +310,7 @@ export async function downloadTableAsJSON() {
     let jsonContent = JSON.stringify(jsonData, null, 2);
 
     downloadFile(jsonContent, `arabic-verbs-${timestamp}.json`, 'application/json');
-    alert(`Number of verbs downloaded: ${filteredData.length}`);
+    alert(`عدد الأفعال المُنزَّلة: ${filteredData.length}`);
   } catch (error) {
     alert('Error: ' + error.message);
   } finally {
@@ -338,9 +338,9 @@ export async function downloadTableAsTXT() {
       return;
     }
 
-    let txtContent = `Custom message slot\n`;
-    txtContent += `Date and time: ${new Date().toLocaleString('ar')}\n`;
-    txtContent += `Number of verbs: ${filteredData.length}\n`;
+    let txtContent = `هذه الأفعال مُنزَّلة من مبادرة مسرد الويكي https://w.wiki/DozW، ومرخَّصة برخصة المشاع الإبداعي: CC BY 4.0\n`;
+    txtContent += `تاريخ التنزيل وزمانه: ${new Date().toLocaleString('ar')}\n`;
+    txtContent += `عدد الأفعال: ${filteredData.length}\n`;
     txtContent += `${'='.repeat(70)}\n\n`;
 
     filteredData.forEach((item, index) => {
@@ -355,7 +355,7 @@ export async function downloadTableAsTXT() {
 
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     downloadFile(txtContent, `arabic-verbs-${timestamp}.txt`, 'text/plain');
-    alert(`Number of verbs downloaded: ${filteredData.length}`);
+    alert(`عدد الأفعال المُنزَّلة: ${filteredData.length}`);
   } catch (error) {
     alert('حدث خطأ: ' + error.message);
   } finally {
