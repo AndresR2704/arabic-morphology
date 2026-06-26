@@ -627,6 +627,7 @@ function applyFilters() {
   const vowelPattern = document.getElementById('vowelPatternSelect')?.value || '';
 
   const filtered = ALL.filter((r) => {
+    // ----- Common filters -----
     if (cat && r[FIELD.cat] !== cat) return false;
     if (deriv && r[FIELD.deriv] !== deriv) return false;
     if (trans && r[FIELD.trans] !== trans) return false;
@@ -636,6 +637,7 @@ function applyFilters() {
     const root = r[FIELD.root];
     const rootLength = root.length;
 
+    // ----- Letter filters  -----
     if (cat === 'tri' && rootLength === 3) {
       if (letter1 && root[0] !== letter1) return false;
       if (letter2 && root[1] !== letter2) return false;
@@ -652,8 +654,9 @@ function applyFilters() {
       }
     }
 
-    // Vowel filters (toggle ON)
+    // ========== VOWEL LOGIC ==========
     if (cat === 'tri' && showVowelOnly) {
+      // ----- Helper functions -----
       const isVowel = (ch) => /[وي]/.test(ch);
       const matchesType = (ch) => {
         if (!vowelType) return isVowel(ch);
@@ -661,46 +664,43 @@ function applyFilters() {
         if (vowelType === 'i') return ch === 'ي';
         return false;
       };
-      function isOnlyVowelAt(pos) {
-        const vowelPositions = [0, 1, 2].filter(i => isVowel(root[i]));
-        if (vowelPositions.length !== 1) return false;
-        return vowelPositions[0] === pos && matchesType(root[pos]);
-      }
-      if (vowelPosition === 'start') {
-        if (!isOnlyVowelAt(0)) return false;
-      } else if (vowelPosition === 'middle') {
-        if (!isOnlyVowelAt(1)) return false;
-      } else if (vowelPosition === 'end') {
-        if (!isOnlyVowelAt(2)) return false;
-      } else if (vowelPosition === 'double') {
-        const vowelCount = [root[0], root[1], root[2]].filter(isVowel).length;
-        if (vowelCount < 2) return false;
-        const middleIsVowel = isVowel(root[1]);
-        if (vowelPattern === 'grouped') {
-          if (!middleIsVowel) return false;
-        } else if (vowelPattern === 'seperate') {
-          if (middleIsVowel) return false;
-        }
-      } else {
-        if (!/[وي]/.test(root)) return false;
-      }
-    }
 
-    // Hamzah/doubled (toggle ON)
-    if (showVowelOnly) {
+      const isVowelAt = (pos) => matchesType(root[pos]);
+
+      const isNotVowelAt = (pos) => !isVowel(root[pos]);
+
+      // ----- Position‑based filtering-----
+      if (vowelPosition === 'start') {
+        if (!isVowelAt(0) || !isNotVowelAt(1) || !isNotVowelAt(2)) return false;
+      } else if (vowelPosition === 'middle') {
+        if (!isNotVowelAt(0) || !isVowelAt(1) || !isNotVowelAt(2)) return false;
+      } else if (vowelPosition === 'end') {
+        if (!isNotVowelAt(0) || !isNotVowelAt(1) || !isVowelAt(2)) return false;
+      } else if (vowelPosition === 'double') {
+        // At least two vowels are required
+        const vowelCount = [0, 1, 2].filter(i => isVowelAt(i)).length;
+        if (vowelCount < 2) return false;
+        if (vowelPattern === 'grouped' && !isVowelAt(1)) return false;
+        if (vowelPattern === 'seperate' && !isNotVowelAt(1)) return false;
+      } else {
+        // Any vowel position – at least one vowel anywhere
+        if (![0, 1, 2].some(i => isVowelAt(i))) return false;
+      }
+
+      // ----- Hamzah / doubled sub‑filters -----
       if (hamzahVal === 'opt40' && root[0] !== 'أ') return false;
       if (hamzahVal === 'opt41' && root[1] !== 'أ') return false;
       if (hamzahVal === 'opt42' && root[2] !== 'أ') return false;
       if (hamzahVal === 'opt43' && root[1] !== root[2]) return false;
     }
 
-    // No‑vowel filters (toggle OFF)
+    // ========== NO‑VOWEL LOGIC ==========
     if (cat === 'tri' && !showVowelOnly && rootLength === 3) {
       const r0 = root[0], r1 = root[1], r2 = root[2];
       if (nvTypeVal === 'opt1') {
         if (!root.includes('أ')) return false;
       } else if (nvTypeVal === 'opt2') {
-        if (r1 !== r2) return false;
+        if (root.includes('أ') || r1 !== r2) return false;
       } else if (nvTypeVal === 'opt3') {
         if (root.includes('أ') || r1 === r2) return false;
       }
@@ -708,10 +708,10 @@ function applyFilters() {
       if (nvTypeVal === 'opt1' && hamzaSubVal) {
         switch (hamzaSubVal) {
           case 'sub1': if (!(r0 === 'أ' && r2 === 'أ')) return false; break;
-          case 'sub2': if (!(r0 === 'أ' && r1 !== 'أ' && r2 !== 'أ')) return false; break;
+          case 'sub2': if (r0 !== 'أ' || r1 === 'أ' || r2 === 'أ') return false; break;
           case 'sub3': if (!(r0 === 'أ' && r1 === r2)) return false; break;
-          case 'sub4': if (!(r1 === 'أ')) return false; break;
-          case 'sub5': if (!(r2 === 'أ')) return false; break;
+          case 'sub4': if (r0 === 'أ' || r1 !== 'أ'|| r2 === 'أ') return false; break;
+          case 'sub5': if (r0 === 'أ' || r1 === 'أ' ||r2 !== 'أ') return false; break;
         }
       }
     }
@@ -719,6 +719,7 @@ function applyFilters() {
     return true;
   });
 
+  // ----- Sorting and rendering -----
   if (sort.index != null) {
     const key = COLS[sort.index].sortKey;
     filtered.sort((a, b) => sort.dir * String(key(a)).localeCompare(String(key(b)), 'ar', { numeric: true }));
