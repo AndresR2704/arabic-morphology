@@ -262,7 +262,7 @@ export async function downloadTableAsCSV() {
     csvContent += "\n\n# CSV LICENSE HERE"; //----------LICENSE!!!!!---------------
 
     downloadFile(csvContent, `arabic-verbs-${timestamp}.csv`, 'text/csv');
-     alert('Number of verbs downloaded: ${filteredData.length}');
+     alert(`Number of verbs downloaded: ${filteredData.length}`);
   } catch (error) {
     console.error('Download error:', error);
     alert('حدث خطأ: ' + error.message);
