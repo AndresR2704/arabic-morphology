@@ -38,7 +38,10 @@ async function loadOriginalData() {
 }
 
 function getCurrentFilters() {
-  const search = document.getElementById('search')?.value || '';
+  // Normalize search term right away (matches original behaviour)
+  const searchInput = document.getElementById('search')?.value || '';
+  const search = normalizeArabic(searchInput).trim();
+
   const filterCat = document.getElementById('filterCat')?.value || '';
   const filterDeriv = document.getElementById('filterDeriv')?.value || '';
   const filterTrans = document.getElementById('filterTrans')?.value || '';
@@ -79,7 +82,7 @@ function getCurrentFilters() {
   const transMap = { 'لازم': 'l', 'متعدٍّ': 'm', 'مشترك': 'k' };
 
   return {
-    search: search.trim(),
+    search,   // already normalized
     cat: catMap[filterCat] || filterCat,
     deriv: derivMap[filterDeriv] || filterDeriv,
     trans: transMap[filterTrans] || filterTrans,
@@ -113,7 +116,9 @@ function applyFilters(data, filters) {
     doubleChecked,
   } = filters;
 
+  // search is already normalized by getCurrentFilters()
   return data.filter(r => {
+    // ----- Common filters -----
     if (cat && r.cat !== cat) return false;
     if (deriv && r.deriv !== deriv) return false;
     if (trans && r.trans !== trans) return false;
@@ -124,12 +129,12 @@ function applyFilters(data, filters) {
       if (!verbNorm.includes(search) && !rootNorm.includes(search)) return false;
     }
 
-    // ----- Pattern checkboxes -----
     if (selectedPatterns.length > 0 && !selectedPatterns.includes(String(r.pattern))) return false;
 
     const root = r.root || '';
     const rootLength = root.length;
 
+    // ----- Letter filters -----
     if (cat === 'tri' && rootLength === 3) {
       if (letter1 && root[0] !== letter1) return false;
       if (letter2 && root[1] !== letter2) return false;
@@ -145,7 +150,7 @@ function applyFilters(data, filters) {
       }
     }
 
-    // ----- Vowel filters (toggle ON) -----
+    // ========== VOWEL LOGIC (toggle ON) ==========
     if (cat === 'tri' && showVowelOnly && rootLength === 3) {
       const isVowel = ch => /[وي]/.test(ch);
       const matchesType = ch => {
@@ -154,53 +159,52 @@ function applyFilters(data, filters) {
         if (vowelType === 'i') return ch === 'ي';
         return false;
       };
-      function isOnlyVowelAt(pos) {
-        const vowelPositions = [0,1,2].filter(i => isVowel(root[i]));
-        if (vowelPositions.length !== 1) return false;
-        return vowelPositions[0] === pos && matchesType(root[pos]);
-      }
+      const isVowelAt = pos => matchesType(root[pos]);
+      const isNotVowelAt = pos => !isVowel(root[pos]);
 
+      // Position-based filtering
       if (vowelPosition === 'start') {
-        if (!isOnlyVowelAt(0)) return false;
+        if (!isVowelAt(0) || !isNotVowelAt(1) || !isNotVowelAt(2)) return false;
       } else if (vowelPosition === 'middle') {
-        if (!isOnlyVowelAt(1)) return false;
+        if (!isNotVowelAt(0) || !isVowelAt(1) || !isNotVowelAt(2)) return false;
       } else if (vowelPosition === 'end') {
-        if (!isOnlyVowelAt(2)) return false;
+        if (!isNotVowelAt(0) || !isNotVowelAt(1) || !isVowelAt(2)) return false;
       } else if (vowelPosition === 'double') {
-        const vowelCount = [root[0], root[1], root[2]].filter(isVowel).length;
+        const vowelCount = [0,1,2].filter(i => isVowelAt(i)).length;
         if (vowelCount < 2) return false;
-        const middleIsVowel = isVowel(root[1]);
-        if (vowelPattern === 'grouped' && !middleIsVowel) return false;
-        if (vowelPattern === 'seperate' && middleIsVowel) return false;
+        if (vowelPattern === 'grouped' && !isVowelAt(1)) return false;
+        if (vowelPattern === 'seperate' && isVowelAt(1)) return false;
       } else {
-        if (!/[وي]/.test(root)) return false;
+        // Any vowel position – at least one vowel anywhere
+        if (![0,1,2].some(i => isVowelAt(i))) return false;
       }
 
-      // Hamzah/doubled sub‑filters (within vowel‑on)
+      // Hamzah / doubled sub‑filters (within vowel‑on)
       if (hamzahVal === 'opt40' && root[0] !== 'أ') return false;
       if (hamzahVal === 'opt41' && root[1] !== 'أ') return false;
       if (hamzahVal === 'opt42' && root[2] !== 'أ') return false;
       if (hamzahVal === 'opt43' && root[1] !== root[2]) return false;
     }
 
-    // ----- No‑vowel filters (toggle OFF) -----
+    // ========== NO‑VOWEL LOGIC ==========
     if (cat === 'tri' && !showVowelOnly && rootLength === 3) {
-      const [r0, r1, r2] = root;
+      const r0 = root[0], r1 = root[1], r2 = root[2];
       if (nvTypeVal === 'opt1') {
         if (!root.includes('أ')) return false;
-        if (hamzaSubVal) {
-          switch (hamzaSubVal) {
-            case 'sub1': if (!(r0 === 'أ' && r2 === 'أ')) return false; break;
-            case 'sub2': if (!(r0 === 'أ' && r1 !== 'أ' && r2 !== 'أ')) return false; break;
-            case 'sub3': if (!(r0 === 'أ' && r1 === r2)) return false; break;
-            case 'sub4': if (!(r1 === 'أ')) return false; break;
-            case 'sub5': if (!(r2 === 'أ')) return false; break;
-          }
-        }
       } else if (nvTypeVal === 'opt2') {
-        if (r1 !== r2) return false;
-      } else if (nvTypeVal === 'opt3') { 
+        if (root.includes('أ') || r1 !== r2) return false;
+      } else if (nvTypeVal === 'opt3') {
         if (root.includes('أ') || r1 === r2) return false;
+      }
+
+      if (nvTypeVal === 'opt1' && hamzaSubVal) {
+        switch (hamzaSubVal) {
+          case 'sub1': if (!(r0 === 'أ' && r2 === 'أ')) return false; break;
+          case 'sub2': if (r0 !== 'أ' || r1 === 'أ' || r2 === 'أ') return false; break;
+          case 'sub3': if (!(r0 === 'أ' && r1 === r2)) return false; break;
+          case 'sub4': if (r0 === 'أ' || r1 !== 'أ'|| r2 === 'أ') return false; break;
+          case 'sub5': if (r0 === 'أ' || r1 === 'أ' ||r2 !== 'أ') return false; break;
+        }
       }
     }
 
@@ -259,7 +263,7 @@ export async function downloadTableAsCSV() {
     csvContent += "\n\n# CSV LICENSE HERE"; //----------LICENSE!!!!!---------------
 
     downloadFile(csvContent, `arabic-verbs-${timestamp}.csv`, 'text/csv');
-    alert(`تم تحميل ${filteredData.length} صف بنجاح`);
+    // alert(`Number of verbs downloaded: ${filteredData.length});
   } catch (error) {
     console.error('Download error:', error);
     alert('حدث خطأ: ' + error.message);
@@ -352,7 +356,7 @@ export async function downloadTableAsTXT() {
 
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     downloadFile(txtContent, `arabic-verbs-${timestamp}.txt`, 'text/plain');
-    alert(`تم تحميل ${filteredData.length} صف بنجاح`);
+    alert(`Number of verbs downloaded: ${filteredData.length} صف بنجاح`);
   } catch (error) {
     alert('حدث خطأ: ' + error.message);
   } finally {
