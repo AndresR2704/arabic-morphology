@@ -433,7 +433,7 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
   .dynamic-filter  { order: 3; }
   .image-container { order: 4; }
   .table-mount     { order: 5; }
-  .download        { order: 6; align-self: flex-start; }
+  .download        { order: 6; align-self: stretch; }
 
   /* Filters: a responsive row that wraps — search on its own line, the rest
      flow and wrap as space allows rather than a stiff vertical stack. */
