@@ -10,7 +10,8 @@
   --accent: #1d6a5c;
   --accent-ink: #ffffff;
   --header-link: #d6efe8;
-  /* Light backdrop kept behind the diagram SVGs so they stay legible in dark mode. */
+  /* No backdrop behind the diagrams — the wheels are colourful/light by design
+     and read fine directly on the page in either theme. */
   --diagram-bg: transparent;
 
   --row-h: 38px;
@@ -39,7 +40,6 @@
   --accent: #3aa993;
   --accent-ink: #ffffff;
   --header-link: #cdeee5;
-  --diagram-bg: #f7f6f3;
 }
 
 * { box-sizing: border-box; }
