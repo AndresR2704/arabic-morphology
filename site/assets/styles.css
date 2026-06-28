@@ -183,9 +183,18 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
   border: 1px solid var(--border); border-radius: 8px; background: var(--field-bg); color: var(--ink);
 }
 
-#list1 {
-  text-align: end;
+/* Every label + dropdown row across the filter boxes (الحرف الأول/الأوسط/الأخير,
+   موقع حرف العلة, حرف العلة, ...): the label hugs the RTL start (right) and the
+   dropdown hugs the end (left), so rows fill the width and align into a column
+   instead of leaning left or sitting ragged-inline. :has(select) keeps this off
+   the checkbox/radio rows. Applies at all screen sizes (no media query). */
+.dynamic-filter p:has(select) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
+.dynamic-filter p:has(select) select { min-width: 0; }
 
 #list2 {
   text-align: center;
