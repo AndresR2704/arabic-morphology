@@ -171,7 +171,7 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
 
 .control-panel {
   display: grid;
-  grid-template-rows: 4% 10% 33% auto;
+  grid-template-rows: auto auto auto 1fr;
 }
 .data-panel {
   display: grid;
@@ -180,10 +180,10 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
 }
 
 .dynamic-filter {
-  height: 30%;
   padding-right: 5%;
   display: flex;
-  gap: 5px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 .dynamic-filter select {
   height: 35px;
@@ -223,35 +223,16 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
 .sound-toggle:has(#vowelToggle:checked) .toggle-label-off { color: var(--muted); font-weight: 400; }
 .sound-toggle:has(#vowelToggle:checked) .toggle-label-on { color: var(--accent); font-weight: 700; }
 
-/* The patterns box stacks its title, the augmentation checkboxes (list7) and the
-   pattern checkboxes (list8). list8 fills the remaining height and wraps its items
-   into extra columns instead of overflowing the box onto the diagram below. */
-#box7 {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-#box7 .box-title { flex: 0 0 auto; }
-
-#list7 {
-  height: fit-content;
-  flex: 0 0 auto;
-}
-
+/* Pattern checkboxes (list8): flow inline and wrap within the box width, so
+   they can never spill out of the box sideways; the box grows in height. */
 #list8 {
   display: flex;
-  flex: 1 1 0;
-  flex-direction: column;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
   align-content: flex-start;
-  min-height: 0;
-  padding: 0.5rem;
-  gap: 0px 5px;
+  gap: 4px 14px;
+  padding: 6px 4px 2px;
 }
-
-#list8 > * {
-  height: auto;
-}
+#list8 label { white-space: nowrap; }
 
 /* Download button */
 .download {
@@ -346,11 +327,14 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
 }
 
 .control-box {
-  height: 25vh;
-  min-height: fit-content;
   padding: 10px;
   border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink);
   flex: 1 1 0;
+  min-width: 0;
+  /* Content-sized: the box grows with its options. The cap keeps a lone box
+     (e.g. رباعي, where only the root box shows) from stretching across the
+     whole panel and pushing its label/dropdown pairs absurdly far apart. */
+  max-width: 400px;
 }
 
 /* Title for each advanced-filter box (root / sound-defective / patterns). */
@@ -500,12 +484,10 @@ main.wrap { padding-top: 16px; padding-bottom: 48px; }
   .filters #derivContainer select { flex: 1 1 auto; width: 100%; }
   .counter { flex: 1 1 100%; margin: 0; text-align: start; }
 
-  /* Advanced filter boxes wrap instead of sitting in one fixed-height row. On this
-     content-sized layout box7/list8 flow naturally rather than flex-filling. */
-  .dynamic-filter { height: auto; padding-right: 0; flex-wrap: wrap; }
-  .control-box { height: auto; min-height: 0; flex: 1 1 200px; }
-  #box7 { display: block; }
-  #list8 { display: inline-flex; flex: 0 0 auto; max-height: none; }
+  /* Advanced filter boxes wrap instead of sitting in one row; here they may
+     share a row two-up, so let them fill it instead of capping their width. */
+  .dynamic-filter { padding-right: 0; flex-wrap: wrap; margin-bottom: 0; }
+  .control-box { flex: 1 1 200px; max-width: none; }
 
   /* Diagrams keep two side-by-side (so they don't dominate vertically) and
      scale down to fit; they appear above the table per the requested order. */
